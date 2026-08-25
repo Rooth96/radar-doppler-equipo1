@@ -1,0 +1,8 @@
+{
+  "exclusion_hz": 50.0,
+  "threshold_db": 8.0,
+  "minimum_hits": 2,
+  "geometry_factor": 2.0,
+  "poll_interval_seconds": 1.0,
+  "status": "PROVISIONAL_DESARROLLO"
+}
