@@ -33,16 +33,64 @@ options:
     state: enabled
 
 blocks:
-- name: samp_rate
+- name: analysis_rate
   id: variable
   parameters:
     comment: ''
-    value: '32000'
+    value: sample_rate/10
   states:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [200, 12]
+    coordinate: [656, 24.0]
+    rotation: 0
+    state: enabled
+- name: center_freq
+  id: variable
+  parameters:
+    comment: ''
+    value: '99300000'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [248, 24.0]
+    rotation: 0
+    state: enabled
+- name: fft_size
+  id: variable
+  parameters:
+    comment: ''
+    value: '65636'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [808, 24.0]
+    rotation: 0
+    state: enabled
+- name: gain_db
+  id: variable
+  parameters:
+    comment: ''
+    value: '20'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [536, 24.0]
+    rotation: 0
+    state: enabled
+- name: sample_rate
+  id: variable
+  parameters:
+    comment: ''
+    value: '2400000'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [392, 24.0]
     rotation: 0
     state: enabled
 - name: analog_wfm_rcv_0
@@ -92,7 +140,7 @@ blocks:
     interp: '1'
     maxoutbuf: '0'
     minoutbuf: '0'
-    samp_rate: '2400000'
+    samp_rate: sample_rate
     type: fir_filter_ccf
     width: '20000'
     win: window.WIN_HAMMING
@@ -121,7 +169,7 @@ blocks:
     autoscale: 'False'
     average: '1.0'
     axislabels: 'True'
-    bw: '2048000'
+    bw: sample_rate
     color1: '"blue"'
     color10: '"dark blue"'
     color2: '"red"'
@@ -134,7 +182,7 @@ blocks:
     color9: '"dark green"'
     comment: ''
     ctrlpanel: 'False'
-    fc: '99300000'
+    fc: center_freq
     fftsize: '1024'
     freqhalf: 'True'
     grid: 'False'
@@ -359,7 +407,7 @@ blocks:
     dc_offset_mode7: '0'
     dc_offset_mode8: '0'
     dc_offset_mode9: '0'
-    freq0: '99300000'
+    freq0: center_freq
     freq1: 100e6
     freq10: 100e6
     freq11: 100e6
@@ -391,7 +439,7 @@ blocks:
     freq7: 100e6
     freq8: 100e6
     freq9: 100e6
-    gain0: '20'
+    gain0: gain_db
     gain1: '10'
     gain10: '10'
     gain11: '10'
@@ -523,8 +571,8 @@ blocks:
     minoutbuf: '0'
     nchan: '1'
     num_mboards: '1'
-    sample_rate: '2048000'
-    sync: sync
+    sample_rate: sample_rate
+    sync: none
     time_source0: ''
     time_source1: ''
     time_source2: ''
