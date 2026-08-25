@@ -95,24 +95,33 @@ def detect_movement(
     exclusion_hz,
     threshold_db,
     minimum_hits,
+    reference_notch_hz=15.0,
+    min_doppler_hz=None,
+    max_doppler_hz=150.0,
 ):
     """
-    Ejecuta la logica completa de deteccion Doppler.
+    Ejecuta la deteccion Doppler completa.
 
-    Flujo:
+    exclusion_hz se conserva por compatibilidad
+    y para estimar el piso de ruido / buscar
+    la referencia.
 
-    1. Estimar piso de ruido.
-    2. Detectar referencia.
-    3. Suprimir componente estacionaria.
-    4. Buscar candidato Doppler.
-    5. Calcular Doppler.
-    6. Calcular SNR.
-    7. Comprobar persistencia.
-    8. Determinar detected.
+    min_doppler_hz y max_doppler_hz delimitan
+    la zona util de busqueda Doppler.
     """
 
     # --------------------------------------------------------
-    # 1. Piso de ruido
+    # COMPATIBILIDAD CON VERSION ANTERIOR
+    # --------------------------------------------------------
+
+    if min_doppler_hz is None:
+
+        min_doppler_hz = float(
+            exclusion_hz
+        )
+
+    # --------------------------------------------------------
+    # 1. ESTIMAR PISO DE RUIDO
     # --------------------------------------------------------
 
     noise_floor_db = estimate_noise_floor(
@@ -121,7 +130,7 @@ def detect_movement(
     )
 
     # --------------------------------------------------------
-    # 2. Referencia / portadora
+    # 2. DETECTAR REFERENCIA / PORTADORA
     # --------------------------------------------------------
 
     (
@@ -133,31 +142,61 @@ def detect_movement(
     )
 
     # --------------------------------------------------------
-    # 3. Supresion de componente estacionaria
+    # 3. SUPRIMIR COMPONENTE ESTACIONARIA
     # --------------------------------------------------------
 
-    suppressed_spectrum = suppress_reference_notch(
-        spectrum=spectrum,
-        reference_offset_hz=reference_offset_hz,
-        noise_floor_db=noise_floor_db,
-        notch_half_width_hz=exclusion_hz,
+    suppressed_spectrum = (
+        suppress_reference_notch(
+            spectrum=spectrum,
+
+            reference_offset_hz=(
+                reference_offset_hz
+            ),
+
+            noise_floor_db=(
+                noise_floor_db
+            ),
+
+            notch_half_width_hz=(
+                reference_notch_hz
+            ),
+        )
     )
 
     # --------------------------------------------------------
-    # 4. Buscar candidato Doppler
+    # 4. BUSCAR CANDIDATO SOLO EN RANGO DOPPLER
     # --------------------------------------------------------
 
     candidate = find_doppler_candidate(
         spectrum=suppressed_spectrum,
-        reference_offset_hz=reference_offset_hz,
-        noise_floor_db=noise_floor_db,
-        exclusion_hz=exclusion_hz,
-        threshold_db=threshold_db,
-        power_column="power_suppressed_db",
+
+        reference_offset_hz=(
+            reference_offset_hz
+        ),
+
+        noise_floor_db=(
+            noise_floor_db
+        ),
+
+        min_doppler_hz=(
+            min_doppler_hz
+        ),
+
+        max_doppler_hz=(
+            max_doppler_hz
+        ),
+
+        threshold_db=(
+            threshold_db
+        ),
+
+        power_column=(
+            "power_suppressed_db"
+        ),
     )
 
     # --------------------------------------------------------
-    # 5. Caso SIN candidato
+    # 5. CASO SIN CANDIDATO
     # --------------------------------------------------------
 
     if candidate is None:
@@ -188,7 +227,7 @@ def detect_movement(
         }
 
     # --------------------------------------------------------
-    # 6. Doppler
+    # 6. CALCULAR DOPPLER
     # --------------------------------------------------------
 
     doppler_hz = calculate_doppler_hz(
@@ -197,7 +236,7 @@ def detect_movement(
     )
 
     # --------------------------------------------------------
-    # 7. SNR
+    # 7. CALCULAR SNR
     # --------------------------------------------------------
 
     snr_db = calculate_snr_db(
@@ -206,7 +245,7 @@ def detect_movement(
     )
 
     # --------------------------------------------------------
-    # 8. Persistencia
+    # 8. COMPROBAR PERSISTENCIA
     # --------------------------------------------------------
 
     (
@@ -215,16 +254,26 @@ def detect_movement(
         total_instants
     ) = check_persistence(
         waterfall=waterfall,
+
         candidate_frequency_hz=(
             candidate["frequency_hz"]
         ),
-        noise_floor_db=noise_floor_db,
-        threshold_db=threshold_db,
-        minimum_hits=minimum_hits,
+
+        noise_floor_db=(
+            noise_floor_db
+        ),
+
+        threshold_db=(
+            threshold_db
+        ),
+
+        minimum_hits=(
+            minimum_hits
+        ),
     )
 
     # --------------------------------------------------------
-    # 9. Decision final
+    # 9. DECISION FINAL
     # --------------------------------------------------------
 
     detected = (
@@ -233,7 +282,7 @@ def detect_movement(
     )
 
     # --------------------------------------------------------
-    # 10. Resultado completo
+    # 10. RESULTADO
     # --------------------------------------------------------
 
     return {
@@ -277,23 +326,42 @@ def detect_movement(
 if __name__ == "__main__":
 
     # --------------------------------------------------------
-    # 1. Leer datos
+    # 1. LEER DATOS
     # --------------------------------------------------------
 
     spectrum = load_spectrum()
-    waterfall = load_waterfall()
 
-    # --------------------------------------------------------
-    # 2. Leer parametros configurables
-    # --------------------------------------------------------
+    waterfall = load_waterfall()
 
     detection_config = (
         load_detection_config()
     )
 
+    # --------------------------------------------------------
+    # 2. PARAMETROS
+    # --------------------------------------------------------
+
     exclusion_hz = float(
         detection_config[
             "exclusion_hz"
+        ]
+    )
+
+    reference_notch_hz = float(
+        detection_config[
+            "reference_notch_hz"
+        ]
+    )
+
+    min_doppler_hz = float(
+        detection_config[
+            "min_doppler_hz"
+        ]
+    )
+
+    max_doppler_hz = float(
+        detection_config[
+            "max_doppler_hz"
         ]
     )
 
@@ -310,15 +378,36 @@ if __name__ == "__main__":
     )
 
     # --------------------------------------------------------
-    # 3. Ejecutar detector
+    # 3. EJECUTAR DETECTOR
     # --------------------------------------------------------
 
     result = detect_movement(
         spectrum=spectrum,
         waterfall=waterfall,
-        exclusion_hz=exclusion_hz,
-        threshold_db=threshold_db,
-        minimum_hits=minimum_hits,
+
+        exclusion_hz=(
+            exclusion_hz
+        ),
+
+        threshold_db=(
+            threshold_db
+        ),
+
+        minimum_hits=(
+            minimum_hits
+        ),
+
+        reference_notch_hz=(
+            reference_notch_hz
+        ),
+
+        min_doppler_hz=(
+            min_doppler_hz
+        ),
+
+        max_doppler_hz=(
+            max_doppler_hz
+        ),
     )
 
     # ========================================================
@@ -326,7 +415,7 @@ if __name__ == "__main__":
     # ========================================================
 
     print(
-        "DETECCION DOPPLER CON CONFIGURACION"
+        "DETECCION DOPPLER - CASO REAL"
     )
 
     print(
@@ -334,8 +423,14 @@ if __name__ == "__main__":
     )
 
     print(
-        f"Zona de exclusion: "
-        f"{exclusion_hz:.2f} Hz"
+        f"Notch referencia: "
+        f"{reference_notch_hz:.2f} Hz"
+    )
+
+    print(
+        f"Rango Doppler: "
+        f"{min_doppler_hz:.2f} - "
+        f"{max_doppler_hz:.2f} Hz"
     )
 
     print(

@@ -1,0 +1,2 @@
+timestamp,doppler_hz,snr_db,peak_power_db,noise_floor_db,velocity_est_kmh,detected
+2026-08-25T16:23:23.907-04:00,0.0,0.0,-15.62,-15.62,0.0,False

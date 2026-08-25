@@ -47,6 +47,21 @@ METRICS_OUTPUT_PATH = (
 
 
 # ============================================================
+# ASEGURAR CARPETA DE SALIDA
+# ============================================================
+
+def ensure_processed_directory():
+    """
+    Crea data/processed si no existe.
+    """
+
+    PROCESSED_DIR.mkdir(
+        parents=True,
+        exist_ok=True
+    )
+
+
+# ============================================================
 # GENERAR detection_latest.json
 # ============================================================
 
@@ -64,15 +79,21 @@ def write_detection_latest(
 
     output = {
         "timestamp": str(timestamp),
-        "detected": bool(detected),
+
+        "detected": bool(
+            detected
+        ),
+
         "doppler_hz": round(
             float(doppler_hz),
             2
         ),
+
         "snr_db": round(
             float(snr_db),
             2
         ),
+
         "velocity_est_kmh": round(
             float(velocity_est_kmh),
             2
@@ -109,10 +130,11 @@ def write_event(
     detected,
 ):
     """
-    Registra el resultado en events.csv.
+    Registra el resultado de la captura
+    en events.csv.
 
-    Si ya existe el mismo timestamp,
-    reemplaza esa fila para evitar duplicados.
+    Si existe el mismo timestamp,
+    reemplaza la fila para evitar duplicados.
     """
 
     new_event = {
@@ -202,9 +224,9 @@ def write_metrics(
     """
     Genera metrics.json para Streamlit.
 
-    Los indicadores que requieren observacion
-    experimental permanecen en cero hasta
-    disponer de datos reales.
+    Los indicadores de efectividad experimental
+    permanecen en cero mientras no exista una
+    serie de pruebas etiquetadas con verdad terreno.
     """
 
     if EVENTS_OUTPUT_PATH.exists():
@@ -218,7 +240,7 @@ def write_metrics(
         events = pd.DataFrame()
 
     # --------------------------------------------------------
-    # TOTAL DE EVENTOS DETECTADOS
+    # TOTAL DE EVENTOS POSITIVOS
     # --------------------------------------------------------
 
     if (
@@ -416,26 +438,56 @@ def write_metrics(
 if __name__ == "__main__":
 
     # --------------------------------------------------------
+    # 0. PREPARAR CARPETA
+    # --------------------------------------------------------
+
+    ensure_processed_directory()
+
+    # --------------------------------------------------------
     # 1. LEER ENTRADAS
     # --------------------------------------------------------
 
-    sdr_config = load_sdr_config()
+    sdr_config = (
+        load_sdr_config()
+    )
 
     detection_config = (
         load_detection_config()
     )
 
-    spectrum = load_spectrum()
+    spectrum = (
+        load_spectrum()
+    )
 
-    waterfall = load_waterfall()
+    waterfall = (
+        load_waterfall()
+    )
 
     # --------------------------------------------------------
-    # 2. OBTENER PARAMETROS CONFIGURABLES
+    # 2. PARAMETROS DEL DETECTOR
     # --------------------------------------------------------
 
     exclusion_hz = float(
         detection_config[
             "exclusion_hz"
+        ]
+    )
+
+    reference_notch_hz = float(
+        detection_config[
+            "reference_notch_hz"
+        ]
+    )
+
+    min_doppler_hz = float(
+        detection_config[
+            "min_doppler_hz"
+        ]
+    )
+
+    max_doppler_hz = float(
+        detection_config[
+            "max_doppler_hz"
         ]
     )
 
@@ -458,15 +510,36 @@ if __name__ == "__main__":
     )
 
     # --------------------------------------------------------
-    # 3. EJECUTAR DETECTOR
+    # 3. EJECUTAR DETECTOR CALIBRADO
     # --------------------------------------------------------
 
     result = detect_movement(
         spectrum=spectrum,
         waterfall=waterfall,
-        exclusion_hz=exclusion_hz,
-        threshold_db=threshold_db,
-        minimum_hits=minimum_hits,
+
+        exclusion_hz=(
+            exclusion_hz
+        ),
+
+        threshold_db=(
+            threshold_db
+        ),
+
+        minimum_hits=(
+            minimum_hits
+        ),
+
+        reference_notch_hz=(
+            reference_notch_hz
+        ),
+
+        min_doppler_hz=(
+            min_doppler_hz
+        ),
+
+        max_doppler_hz=(
+            max_doppler_hz
+        ),
     )
 
     # --------------------------------------------------------
@@ -513,14 +586,14 @@ if __name__ == "__main__":
     # 6. TIMESTAMP DE LA CAPTURA
     # --------------------------------------------------------
 
-    timestamp = (
+    timestamp = str(
         spectrum[
             "timestamp"
         ].iloc[-1]
     )
 
     # --------------------------------------------------------
-    # 7. GENERAR detection_latest.json
+    # 7. detection_latest.json
     # --------------------------------------------------------
 
     detection_output = (
@@ -552,87 +625,91 @@ if __name__ == "__main__":
     )
 
     # --------------------------------------------------------
-    # 8. GENERAR events.csv
+    # 8. events.csv
     # --------------------------------------------------------
 
-    event_output = write_event(
-        timestamp=timestamp,
+    event_output = (
+        write_event(
+            timestamp=timestamp,
 
-        doppler_hz=(
-            result[
-                "doppler_hz"
-            ]
-        ),
+            doppler_hz=(
+                result[
+                    "doppler_hz"
+                ]
+            ),
 
-        snr_db=(
-            result[
-                "snr_db"
-            ]
-        ),
+            snr_db=(
+                result[
+                    "snr_db"
+                ]
+            ),
 
-        peak_power_db=(
-            result[
-                "peak_power_db"
-            ]
-        ),
+            peak_power_db=(
+                result[
+                    "peak_power_db"
+                ]
+            ),
 
-        noise_floor_db=(
-            result[
-                "noise_floor_db"
-            ]
-        ),
+            noise_floor_db=(
+                result[
+                    "noise_floor_db"
+                ]
+            ),
 
-        velocity_est_kmh=(
-            velocity_est_kmh
-        ),
+            velocity_est_kmh=(
+                velocity_est_kmh
+            ),
 
-        detected=(
-            result[
-                "detected"
-            ]
-        ),
+            detected=(
+                result[
+                    "detected"
+                ]
+            ),
+        )
     )
 
     # --------------------------------------------------------
-    # 9. GENERAR metrics.json
+    # 9. metrics.json
     # --------------------------------------------------------
 
-    metrics_output = write_metrics(
-        timestamp=timestamp,
+    metrics_output = (
+        write_metrics(
+            timestamp=timestamp,
 
-        current_doppler_hz=(
-            result[
-                "doppler_hz"
-            ]
-        ),
+            current_doppler_hz=(
+                result[
+                    "doppler_hz"
+                ]
+            ),
 
-        current_snr_db=(
-            result[
-                "snr_db"
-            ]
-        ),
+            current_snr_db=(
+                result[
+                    "snr_db"
+                ]
+            ),
 
-        current_velocity_est_kmh=(
-            velocity_est_kmh
-        ),
+            current_velocity_est_kmh=(
+                velocity_est_kmh
+            ),
 
-        movement_detected=(
-            result[
-                "detected"
-            ]
-        ),
+            movement_detected=(
+                result[
+                    "detected"
+                ]
+            ),
 
-        # Pendiente de medicion real.
-        carrier_attenuation_db=0.0,
+            # Pendiente de medicion fisica.
+            carrier_attenuation_db=0.0,
 
-        # Pendientes de observacion externa.
-        true_positives=0,
-        false_positives=0,
-        false_negatives=0,
+            # Pendientes de una serie experimental.
+            true_positives=0,
+            false_positives=0,
+            false_negatives=0,
+        )
     )
 
     # ========================================================
-    # RESULTADOS EN PANTALLA
+    # RESULTADOS
     # ========================================================
 
     print(
@@ -646,6 +723,20 @@ if __name__ == "__main__":
     print()
 
     print(
+        "CASO ANALIZADO"
+    )
+
+    print(
+        "-------------"
+    )
+
+    print(
+        "Captura real GNU Radio / RTL-SDR"
+    )
+
+    print()
+
+    print(
         "PARAMETROS UTILIZADOS"
     )
 
@@ -654,8 +745,14 @@ if __name__ == "__main__":
     )
 
     print(
-        f"Zona de exclusion: "
-        f"{exclusion_hz:.2f} Hz"
+        f"Notch referencia: "
+        f"{reference_notch_hz:.2f} Hz"
+    )
+
+    print(
+        f"Rango Doppler: "
+        f"{min_doppler_hz:.2f} - "
+        f"{max_doppler_hz:.2f} Hz"
     )
 
     print(
@@ -737,11 +834,11 @@ if __name__ == "__main__":
     print()
 
     print(
-        "ARCHIVOS PYTHON -> STREAMLIT"
+        "ARCHIVOS GENERADOS PARA STREAMLIT"
     )
 
     print(
-        "----------------------------"
+        "--------------------------------"
     )
 
     print(
