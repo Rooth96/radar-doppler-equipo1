@@ -1,8 +1,8 @@
 {
-  "timestamp": "2026-08-25T16:23:17-04:00",
+  "timestamp": "2026-08-25T16:50:31-04:00",
   "center_frequency_hz": 99550000.0,
   "sample_rate_hz": 2400000.0,
-  "gain_db": 20.0,
+  "gain_db": 30.0,
   "fft_size": 32768,
   "frequency_resolution_hz": 7.32421875,
   "window_type": "blackman-harris",
