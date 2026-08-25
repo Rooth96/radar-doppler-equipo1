@@ -1,0 +1,81 @@
+PROMPTS PARA EL DESARROLLO DEL DASHBOARD
+Proyecto: Radar Doppler Pasivo Monocanal — Equipo 1
+Fecha de elaboración del registro: 25-08-2026
+
+Nota:
+Los siguientes registros corresponden a resúmenes fieles de las interacciones con IA que influyeron directamente en el diseño, arquitectura, implementación e integración del Dashboard. Se omitieron preguntas de interpretación básica de gráficos, consultas generales y conversaciones que no modificaron el desarrollo del proyecto.
+
+1. DEFINICIÓN DE LA ARQUITECTURA GENERAL DEL SISTEMA
+Fecha: 25-08-2026
+Integrante responsable: Integrante encargado del Dashboard (Felipe)
+Herramienta utilizada: ChatGPT
+Prompt o resumen fiel del prompt:
+Definir una arquitectura común para el proyecto del Equipo 1 que permita trabajar en paralelo entre tres integrantes, separando las funciones de GNU Radio, Python y Streamlit. Se solicitó especificar qué componente recibe cada tipo de información, qué debe procesar y qué debe entregar al siguiente módulo.
+Forma en que el resultado fue verificado:
+La arquitectura RTL-SDR → GNU Radio → Python → Streamlit fue contrastada con los requisitos de la evaluación y revisada con los otros integrantes antes de dividir las tareas.
+
+2. DEFINICIÓN DEL CONTRATO DE DATOS ENTRE GNU RADIO, PYTHON Y STREAMLIT
+Fecha: 25-08-2026
+Integrante responsable: Integrante encargado del Dashboard (Felipe)
+Herramienta utilizada: ChatGPT
+Prompt o resumen fiel del prompt:
+Definir con detalle los archivos, nombres, columnas, formatos, unidades y rutas que deben utilizar GNU Radio, Python y Streamlit para que los tres módulos puedan desarrollarse en paralelo y luego integrarse sin cambiar la arquitectura.
+Forma en que el resultado fue verificado:
+Se crearon archivos simulados con la estructura acordada y se comprobó que Streamlit podía leerlos. Posteriormente se verificó que los archivos enviados por el integrante de Python podían reemplazar los ficticios sin modificar el código del Dashboard.
+
+3. CREACIÓN DE LA ESTRUCTURA INICIAL DEL DASHBOARD EN STREAMLIT
+Fecha: 25-08-2026
+Integrante responsable: Integrante encargado del Dashboard (Felipe)
+Herramienta utilizada: ChatGPT
+Prompt o resumen fiel del prompt:
+Construir una versión inicial del Dashboard en Streamlit que funcionara de forma independiente utilizando datos ficticios compatibles con la arquitectura acordada, permitiendo avanzar sin esperar a que GNU Radio y Python estuvieran terminados.
+Forma en que el resultado fue verificado:
+La aplicación fue ejecutada localmente en Streamlit y se comprobó en el navegador que mostrara correctamente configuración del SDR, Doppler, SNR, velocidad estimada, espectro, waterfall, indicadores e historial de eventos.
+
+4. DEFINICIÓN DEL FLUJO DE ACTUALIZACIÓN DE LOS DATOS
+Fecha: 25-08-2026
+Integrante responsable: Integrante encargado del Dashboard (Felipe)
+Herramienta utilizada: ChatGPT
+Prompt o resumen fiel del prompt:
+Definir cómo deben comportarse los archivos durante una prueba real, distinguiendo cuáles se reemplazan con la medición más reciente y cuáles deben acumular información a través del tiempo.
+Forma en que el resultado fue verificado:
+Se comprobó mediante datos simulados que spectrum_latest.csv y detection_latest.json podían actualizarse, mientras waterfall.csv y events.csv mantenían información temporal e histórica sin alterar la estructura del Dashboard.
+
+5. INCORPORACIÓN DE VALIDACIÓN MANUAL PARA FALSOS POSITIVOS
+Fecha: 25-08-2026
+Integrante responsable: Integrante encargado del Dashboard (Felipe)
+Herramienta utilizada: ChatGPT
+Prompt o resumen fiel del prompt:
+Agregar al Dashboard una forma de registrar si una detección automática correspondió realmente a un objeto en movimiento o si fue un falso positivo, sin modificar los archivos existentes de GNU Radio ni las salidas principales de Python.
+Forma en que el resultado fue verificado:
+Se ejecutó el Dashboard y se comprobó que los botones de confirmación guardaran registros en data/processed/ground_truth.csv, manteniendo intactos los archivos originales de GNU Radio y Python.
+
+6. GENERACIÓN DE DATOS SIMULADOS PARA VALIDAR UNA DETECCIÓN DOPPLER
+Fecha: 25-08-2026
+Integrante responsable: Integrante encargado del Dashboard (Felipe)
+Herramienta utilizada: ChatGPT
+Prompt o resumen fiel del prompt:
+Generar datos ficticios coherentes que permitieran visualizar claramente una portadora principal y una componente Doppler desplazándose en frecuencia, con el objetivo de comprobar que el espectro, waterfall y estado de detección fueran visualmente consistentes.
+Forma en que el resultado fue verificado:
+Los archivos simulados fueron cargados en el Dashboard y se comprobó que el espectro mostrara un pico secundario distinto de la portadora y que el waterfall evidenciara una traza variable en frecuencia.
+
+7. PRUEBA DE INTEGRACIÓN CON LOS ARCHIVOS GENERADOS POR PYTHON
+Fecha: 25-08-2026
+Integrante responsable: Integrante encargado del Dashboard (Felipe)
+Herramienta utilizada: ChatGPT
+Prompt o resumen fiel del prompt:
+Revisar cómo integrar en el Dashboard los archivos de prueba entregados por el integrante encargado de Python, manteniendo el app.py propio y respetando la arquitectura común.
+Forma en que el resultado fue verificado:
+Se reemplazaron únicamente los archivos de datos equivalentes y se ejecutó nuevamente Streamlit. El Dashboard funcionó sin modificar su código y mostró un espectro coherente con una detección Doppler simulada.
+
+8. DEFINICIÓN DEL ARCHIVO DE DEPENDENCIAS PARA REPRODUCIBILIDAD
+Fecha: 25-08-2026
+Integrante responsable: Integrante encargado del Dashboard (Felipe)
+Herramienta utilizada: ChatGPT
+Prompt o resumen fiel del prompt:
+Determinar cómo registrar las dependencias necesarias para ejecutar el Dashboard y posteriormente consolidarlas con las dependencias del módulo Python, de manera que el proyecto pueda reproducirse en otro computador.
+Forma en que el resultado fue verificado:
+Se utilizó un archivo requirements_streamlit.txt y se probó la instalación mediante pip. Luego se ejecutó el Dashboard correctamente en un equipo Windows. Se dejó como criterio final consolidar las dependencias del proyecto completo en requirements.txt.
+
+OBSERVACIÓN FINAL
+Las respuestas entregadas por IA fueron utilizadas como apoyo para definir arquitectura, integración, estructura visual y datos de prueba. Las decisiones incorporadas fueron verificadas mediante ejecución local, revisión de archivos generados, pruebas de lectura entre módulos y contraste con los requisitos de la evaluación. Las salidas de IA no se consideraron válidas por sí solas: se probaron antes de incorporarlas al proyecto.
