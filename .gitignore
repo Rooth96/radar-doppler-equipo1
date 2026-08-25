@@ -216,3 +216,6 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+gnu_radio/flowgraphs/radar_capture.py
+gnu_radio/flowgraphs/radar_capture_epy_block_*.py
