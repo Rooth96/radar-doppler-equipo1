@@ -1,6 +1,9 @@
 from scipy.signal import find_peaks
 
-from data_loader import load_spectrum
+from data_loader import (
+    load_detection_config,
+    load_spectrum,
+)
 
 
 # ============================================================
@@ -14,9 +17,6 @@ def estimate_noise_floor(
     """
     Estima el piso de ruido mediante la mediana de la potencia
     fuera de una zona central de exclusion.
-
-    El parametro central_exclusion_hz es provisional
-    y debe ajustarse durante la calibracion real.
     """
 
     noise_region = spectrum[
@@ -25,6 +25,7 @@ def estimate_noise_floor(
     ]
 
     if noise_region.empty:
+
         raise ValueError(
             "No existen suficientes puntos fuera de la "
             "zona central para estimar el piso de ruido."
@@ -60,6 +61,7 @@ def find_reference_carrier(
     ]
 
     if central_region.empty:
+
         raise ValueError(
             "No existen puntos dentro de la zona "
             "de busqueda de la referencia."
@@ -97,7 +99,7 @@ def suppress_reference_notch(
     spectrum,
     reference_offset_hz,
     noise_floor_db,
-    notch_half_width_hz=50.0
+    notch_half_width_hz=15.0
 ):
     """
     Aplica una supresion espectral tipo notch
@@ -108,17 +110,10 @@ def suppress_reference_notch(
     Crea una nueva columna:
     power_suppressed_db
 
-    Dentro de la zona del notch, la componente
-    estacionaria se lleva provisionalmente al
-    nivel estimado del piso de ruido.
-
-    Este procedimiento sirve para el procesamiento
-    del detector.
-
-    La atenuacion obtenida aqui es una medida
-    SOFTWARE y NO corresponde directamente a la
-    atenuacion fisica de geometria exigida en
-    la evaluacion.
+    IMPORTANTE:
+    Esta supresion es SOFTWARE.
+    No representa directamente la atenuacion
+    fisica exigida experimentalmente.
     """
 
     processed = spectrum.copy()
@@ -140,13 +135,15 @@ def suppress_reference_notch(
     processed.loc[
         notch_mask,
         "power_suppressed_db"
-    ] = float(noise_floor_db)
+    ] = float(
+        noise_floor_db
+    )
 
     return processed
 
 
 # ============================================================
-# ATENUACION DE SOFTWARE DEL NOTCH
+# ATENUACION SOFTWARE DEL NOTCH
 # ============================================================
 
 def calculate_software_notch_attenuation(
@@ -154,14 +151,12 @@ def calculate_software_notch_attenuation(
     suppressed_reference_power_db
 ):
     """
-    Calcula cuanto redujo el software la componente
-    de referencia.
+    Calcula cuanto redujo el software
+    la componente de referencia.
 
-    IMPORTANTE:
-    Este valor es solo diagnostico del procesamiento.
-
-    NO debe utilizarse todavia como
-    carrier_attenuation_db oficial de geometria.
+    Este valor es diagnostico del procesamiento
+    y no debe confundirse con la atenuacion
+    fisica de la portadora directa.
     """
 
     attenuation_db = (
@@ -169,7 +164,9 @@ def calculate_software_notch_attenuation(
         - suppressed_reference_power_db
     )
 
-    return float(attenuation_db)
+    return float(
+        attenuation_db
+    )
 
 
 # ============================================================
@@ -180,30 +177,66 @@ def find_doppler_candidate(
     spectrum,
     reference_offset_hz,
     noise_floor_db,
-    exclusion_hz=50.0,
+    min_doppler_hz=15.0,
+    max_doppler_hz=150.0,
     threshold_db=8.0,
     power_column="power_db",
+    exclusion_hz=None,
 ):
     """
-    Busca picos fuera de la zona central y sobre
-    un umbral relativo al piso de ruido.
+    Busca picos sobre el umbral de potencia
+    dentro de una zona Doppler fisicamente
+    acotada respecto de la referencia.
 
-    power_column permite trabajar con:
-    - power_db
-    - power_suppressed_db
+    Un candidato debe cumplir:
 
-    segun la etapa del procesamiento.
+    min_doppler_hz <= |f - f_ref| <= max_doppler_hz
+
+    exclusion_hz se conserva temporalmente
+    por compatibilidad con las pruebas anteriores.
     """
 
     if power_column not in spectrum.columns:
+
         raise ValueError(
             f"No existe la columna {power_column}"
         )
 
+    # --------------------------------------------------------
+    # COMPATIBILIDAD CON VERSION ANTERIOR
+    # --------------------------------------------------------
+
+    if exclusion_hz is not None:
+
+        min_doppler_hz = float(
+            exclusion_hz
+        )
+
+    if min_doppler_hz <= 0:
+
+        raise ValueError(
+            "min_doppler_hz debe ser mayor que 0."
+        )
+
+    if max_doppler_hz <= min_doppler_hz:
+
+        raise ValueError(
+            "max_doppler_hz debe ser mayor "
+            "que min_doppler_hz."
+        )
+
+    # --------------------------------------------------------
+    # ORDENAR ESPECTRO
+    # --------------------------------------------------------
+
     spectrum_sorted = (
         spectrum
-        .sort_values("frequency_offset_hz")
-        .reset_index(drop=True)
+        .sort_values(
+            "frequency_offset_hz"
+        )
+        .reset_index(
+            drop=True
+        )
     )
 
     frequencies = (
@@ -218,6 +251,10 @@ def find_doppler_candidate(
         ].to_numpy()
     )
 
+    # --------------------------------------------------------
+    # UMBRAL DE POTENCIA
+    # --------------------------------------------------------
+
     minimum_power_db = (
         noise_floor_db
         + threshold_db
@@ -229,6 +266,10 @@ def find_doppler_candidate(
     )
 
     candidates = []
+
+    # --------------------------------------------------------
+    # FILTRAR POR RANGO DOPPLER
+    # --------------------------------------------------------
 
     for index in peak_indices:
 
@@ -247,18 +288,38 @@ def find_doppler_candidate(
 
         if (
             distance_from_reference
-            > exclusion_hz
+            >= min_doppler_hz
+            and
+            distance_from_reference
+            <= max_doppler_hz
         ):
 
             candidates.append(
                 {
-                    "frequency_hz": frequency_hz,
-                    "power_db": power_db,
+                    "frequency_hz":
+                        frequency_hz,
+
+                    "power_db":
+                        power_db,
+
+                    "doppler_distance_hz":
+                        float(
+                            distance_from_reference
+                        ),
                 }
             )
 
+    # --------------------------------------------------------
+    # SIN CANDIDATOS
+    # --------------------------------------------------------
+
     if not candidates:
+
         return None
+
+    # --------------------------------------------------------
+    # SELECCIONAR EL MAS POTENTE
+    # --------------------------------------------------------
 
     strongest_candidate = max(
         candidates,
@@ -276,22 +337,66 @@ def find_doppler_candidate(
 if __name__ == "__main__":
 
     # --------------------------------------------------------
-    # 1. Leer espectro
+    # 1. LEER CONFIGURACION
     # --------------------------------------------------------
 
-    spectrum = load_spectrum()
+    detection_config = (
+        load_detection_config()
+    )
 
-    # --------------------------------------------------------
-    # 2. Estimar ruido
-    # --------------------------------------------------------
+    reference_search_hz = float(
+        detection_config[
+            "exclusion_hz"
+        ]
+    )
 
-    noise_floor_db = estimate_noise_floor(
-        spectrum,
-        central_exclusion_hz=50.0
+    reference_notch_hz = float(
+        detection_config[
+            "reference_notch_hz"
+        ]
+    )
+
+    min_doppler_hz = float(
+        detection_config[
+            "min_doppler_hz"
+        ]
+    )
+
+    max_doppler_hz = float(
+        detection_config[
+            "max_doppler_hz"
+        ]
+    )
+
+    threshold_db = float(
+        detection_config[
+            "threshold_db"
+        ]
     )
 
     # --------------------------------------------------------
-    # 3. Encontrar referencia
+    # 2. LEER ESPECTRO
+    # --------------------------------------------------------
+
+    spectrum = (
+        load_spectrum()
+    )
+
+    # --------------------------------------------------------
+    # 3. ESTIMAR RUIDO
+    # --------------------------------------------------------
+
+    noise_floor_db = (
+        estimate_noise_floor(
+            spectrum,
+            central_exclusion_hz=(
+                reference_search_hz
+            )
+        )
+    )
+
+    # --------------------------------------------------------
+    # 4. ENCONTRAR REFERENCIA
     # --------------------------------------------------------
 
     (
@@ -299,57 +404,57 @@ if __name__ == "__main__":
         reference_power_db
     ) = find_reference_carrier(
         spectrum,
-        search_range_hz=50.0
+        search_range_hz=(
+            reference_search_hz
+        )
     )
 
     # --------------------------------------------------------
-    # 4. Aplicar notch espectral
+    # 5. APLICAR NOTCH
     # --------------------------------------------------------
 
     suppressed_spectrum = (
         suppress_reference_notch(
             spectrum=spectrum,
+
             reference_offset_hz=(
                 reference_offset_hz
             ),
+
             noise_floor_db=(
                 noise_floor_db
             ),
-            notch_half_width_hz=50.0,
+
+            notch_half_width_hz=(
+                reference_notch_hz
+            ),
         )
     )
 
     # --------------------------------------------------------
-    # 5. Localizar referencia luego del notch
+    # 6. POTENCIA DESPUES DEL NOTCH
     # --------------------------------------------------------
 
-    reference_row = (
+    distance_to_reference = (
         suppressed_spectrum[
-            (
-                suppressed_spectrum[
-                    "frequency_offset_hz"
-                ]
-                - reference_offset_hz
-            ).abs()
-            ==
-            (
-                suppressed_spectrum[
-                    "frequency_offset_hz"
-                ]
-                - reference_offset_hz
-            ).abs().min()
+            "frequency_offset_hz"
         ]
-        .iloc[0]
+        - reference_offset_hz
+    ).abs()
+
+    nearest_index = (
+        distance_to_reference.idxmin()
     )
 
     suppressed_reference_power_db = float(
-        reference_row[
+        suppressed_spectrum.loc[
+            nearest_index,
             "power_suppressed_db"
         ]
     )
 
     # --------------------------------------------------------
-    # 6. Calcular atenuacion SOFTWARE
+    # 7. ATENUACION SOFTWARE
     # --------------------------------------------------------
 
     software_attenuation_db = (
@@ -357,6 +462,7 @@ if __name__ == "__main__":
             original_reference_power_db=(
                 reference_power_db
             ),
+
             suppressed_reference_power_db=(
                 suppressed_reference_power_db
             ),
@@ -364,20 +470,39 @@ if __name__ == "__main__":
     )
 
     # --------------------------------------------------------
-    # 7. Buscar candidato usando espectro suprimido
+    # 8. BUSCAR CANDIDATO DOPPLER
     # --------------------------------------------------------
 
-    candidate = find_doppler_candidate(
-        spectrum=suppressed_spectrum,
-        reference_offset_hz=(
-            reference_offset_hz
-        ),
-        noise_floor_db=(
-            noise_floor_db
-        ),
-        exclusion_hz=50.0,
-        threshold_db=8.0,
-        power_column="power_suppressed_db",
+    candidate = (
+        find_doppler_candidate(
+            spectrum=(
+                suppressed_spectrum
+            ),
+
+            reference_offset_hz=(
+                reference_offset_hz
+            ),
+
+            noise_floor_db=(
+                noise_floor_db
+            ),
+
+            min_doppler_hz=(
+                min_doppler_hz
+            ),
+
+            max_doppler_hz=(
+                max_doppler_hz
+            ),
+
+            threshold_db=(
+                threshold_db
+            ),
+
+            power_column=(
+                "power_suppressed_db"
+            ),
+        )
     )
 
     # ========================================================
@@ -385,11 +510,12 @@ if __name__ == "__main__":
     # ========================================================
 
     print(
-        "SUPRESION DE COMPONENTE ESTACIONARIA"
+        "PROCESAMIENTO ESPECTRAL "
+        "CON RANGO DOPPLER"
     )
 
     print(
-        "-----------------------------------"
+        "------------------------------------"
     )
 
     print(
@@ -420,17 +546,48 @@ if __name__ == "__main__":
     print()
 
     print(
-        "CANDIDATO DESPUES DE SUPRESION"
+        "PARAMETROS DE BUSQUEDA DOPPLER"
     )
 
     print(
-        "-------------------------------"
+        "------------------------------------"
+    )
+
+    print(
+        f"Notch referencia: "
+        f"{reference_notch_hz:.2f} Hz"
+    )
+
+    print(
+        f"Doppler minimo: "
+        f"{min_doppler_hz:.2f} Hz"
+    )
+
+    print(
+        f"Doppler maximo: "
+        f"{max_doppler_hz:.2f} Hz"
+    )
+
+    print(
+        f"Umbral: "
+        f"{threshold_db:.2f} dB"
+    )
+
+    print()
+
+    print(
+        "CANDIDATO DENTRO DEL RANGO DOPPLER"
+    )
+
+    print(
+        "------------------------------------"
     )
 
     if candidate is None:
 
         print(
-            "No se encontro candidato Doppler."
+            "No se encontro candidato "
+            "Doppler dentro del rango."
         )
 
     else:
@@ -438,6 +595,11 @@ if __name__ == "__main__":
         print(
             f"Frecuencia candidata: "
             f"{candidate['frequency_hz']:.2f} Hz"
+        )
+
+        print(
+            f"Separacion respecto referencia: "
+            f"{candidate['doppler_distance_hz']:.2f} Hz"
         )
 
         print(

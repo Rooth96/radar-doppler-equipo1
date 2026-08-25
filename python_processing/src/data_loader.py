@@ -102,8 +102,8 @@ def load_detection_config():
     Lee y valida los parametros configurables
     utilizados por el procesamiento Python.
 
-    Estos valores permanecen provisionales
-    hasta la calibracion experimental.
+    Los parametros Doppler permanecen sujetos
+    a calibracion experimental con datos reales.
     """
 
     with open(
@@ -116,6 +116,9 @@ def load_detection_config():
 
     required_fields = [
         "exclusion_hz",
+        "reference_notch_hz",
+        "min_doppler_hz",
+        "max_doppler_hz",
         "threshold_db",
         "minimum_hits",
         "geometry_factor",
@@ -138,13 +141,44 @@ def load_detection_config():
         )
 
     # --------------------------------------------------------
-    # Validaciones basicas
+    # VALIDACIONES BASICAS
     # --------------------------------------------------------
 
     if config["exclusion_hz"] < 0:
 
         raise ValueError(
             "exclusion_hz no puede ser negativo."
+        )
+
+    if config["reference_notch_hz"] <= 0:
+
+        raise ValueError(
+            "reference_notch_hz "
+            "debe ser mayor que 0."
+        )
+
+    if config["min_doppler_hz"] <= 0:
+
+        raise ValueError(
+            "min_doppler_hz "
+            "debe ser mayor que 0."
+        )
+
+    if config["max_doppler_hz"] <= 0:
+
+        raise ValueError(
+            "max_doppler_hz "
+            "debe ser mayor que 0."
+        )
+
+    if (
+        config["max_doppler_hz"]
+        <= config["min_doppler_hz"]
+    ):
+
+        raise ValueError(
+            "max_doppler_hz debe ser mayor "
+            "que min_doppler_hz."
         )
 
     if config["threshold_db"] < 0:
@@ -261,7 +295,7 @@ def load_waterfall():
 if __name__ == "__main__":
 
     # --------------------------------------------------------
-    # 1. Configuracion SDR
+    # 1. CONFIGURACION SDR
     # --------------------------------------------------------
 
     sdr_config = load_sdr_config()
@@ -305,7 +339,7 @@ if __name__ == "__main__":
     )
 
     # --------------------------------------------------------
-    # 2. Configuracion detector
+    # 2. CONFIGURACION DETECTOR
     # --------------------------------------------------------
 
     detection_config = (
@@ -313,6 +347,7 @@ if __name__ == "__main__":
     )
 
     print()
+
     print(
         "CONFIGURACION DETECTOR LEIDA CORRECTAMENTE"
     )
@@ -322,8 +357,23 @@ if __name__ == "__main__":
     )
 
     print(
-        f"Zona de exclusion: "
+        f"Zona de exclusion heredada: "
         f"{detection_config['exclusion_hz']} Hz"
+    )
+
+    print(
+        f"Notch referencia: "
+        f"{detection_config['reference_notch_hz']} Hz"
+    )
+
+    print(
+        f"Doppler minimo: "
+        f"{detection_config['min_doppler_hz']} Hz"
+    )
+
+    print(
+        f"Doppler maximo: "
+        f"{detection_config['max_doppler_hz']} Hz"
     )
 
     print(
@@ -352,12 +402,13 @@ if __name__ == "__main__":
     )
 
     # --------------------------------------------------------
-    # 3. Espectro
+    # 3. ESPECTRO
     # --------------------------------------------------------
 
     spectrum = load_spectrum()
 
     print()
+
     print(
         "ESPECTRO LEIDO CORRECTAMENTE"
     )
@@ -387,12 +438,13 @@ if __name__ == "__main__":
     )
 
     # --------------------------------------------------------
-    # 4. Waterfall
+    # 4. WATERFALL
     # --------------------------------------------------------
 
     waterfall = load_waterfall()
 
     print()
+
     print(
         "WATERFALL LEIDO CORRECTAMENTE"
     )

@@ -1,8 +1,11 @@
 {
   "exclusion_hz": 50.0,
+  "reference_notch_hz": 15.0,
+  "min_doppler_hz": 15.0,
+  "max_doppler_hz": 150.0,
   "threshold_db": 8.0,
   "minimum_hits": 2,
   "geometry_factor": 2.0,
   "poll_interval_seconds": 1.0,
-  "status": "PROVISIONAL_DESARROLLO"
+  "status": "CALIBRACION_DATOS_REALES"
 }
