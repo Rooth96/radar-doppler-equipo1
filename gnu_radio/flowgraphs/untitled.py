@@ -26,6 +26,7 @@ import osmosdr
 import time
 import sip
 import threading
+import untitled_epy_block_0 as epy_block_0  # embedded python block
 
 
 def snipfcn_snippet_0(self):
@@ -239,6 +240,7 @@ class untitled(gr.top_block, Qt.QWidget):
         self._qtgui_freq_sink_x_0_win = sip.wrapinstance(self.qtgui_freq_sink_x_0.qwidget(), Qt.QWidget)
         self.top_layout.addWidget(self._qtgui_freq_sink_x_0_win)
         self.freq_xlating_fir_filter_xxx_0 = filter.freq_xlating_fir_filter_ccc(10, firdes.low_pass(1.0, sample_rate, 100000, 20000, window.WIN_HAMMING), (-tune_offset), sample_rate)
+        self.epy_block_0 = epy_block_0.blk(sample_rate=analysis_rate, fft_size=fft_size, update_period=1.0, history_seconds=30.0, export_half_span_hz=5000.0)
         self.audio_sink_0 = audio.sink(48000, '', True)
         self.analog_wfm_rcv_0 = analog.wfm_rcv(
         	quad_rate=analysis_rate,
@@ -251,6 +253,7 @@ class untitled(gr.top_block, Qt.QWidget):
         ##################################################
         self.connect((self.analog_wfm_rcv_0, 0), (self.audio_sink_0, 0))
         self.connect((self.freq_xlating_fir_filter_xxx_0, 0), (self.analog_wfm_rcv_0, 0))
+        self.connect((self.freq_xlating_fir_filter_xxx_0, 0), (self.epy_block_0, 0))
         self.connect((self.freq_xlating_fir_filter_xxx_0, 0), (self.qtgui_freq_sink_x_0_0, 0))
         self.connect((self.freq_xlating_fir_filter_xxx_0, 0), (self.qtgui_waterfall_sink_x_0, 0))
         self.connect((self.rtlsdr_source_0, 0), (self.freq_xlating_fir_filter_xxx_0, 0))
@@ -302,6 +305,7 @@ class untitled(gr.top_block, Qt.QWidget):
 
     def set_fft_size(self, fft_size):
         self.fft_size = fft_size
+        self.epy_block_0.fft_size = self.fft_size
 
     def get_center_freq(self):
         return self.center_freq
@@ -316,6 +320,7 @@ class untitled(gr.top_block, Qt.QWidget):
 
     def set_analysis_rate(self, analysis_rate):
         self.analysis_rate = analysis_rate
+        self.epy_block_0.sample_rate = self.analysis_rate
         self.qtgui_freq_sink_x_0_0.set_frequency_range(0, self.analysis_rate)
         self.qtgui_waterfall_sink_x_0.set_frequency_range(0, self.analysis_rate)
 
