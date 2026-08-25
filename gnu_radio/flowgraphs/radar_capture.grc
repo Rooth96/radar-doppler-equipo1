@@ -49,7 +49,7 @@ blocks:
   id: variable
   parameters:
     comment: ''
-    value: '99300000'
+    value: station_freq + tune_offset
   states:
     bus_sink: false
     bus_source: false
@@ -93,6 +93,30 @@ blocks:
     coordinate: [392, 24.0]
     rotation: 0
     state: enabled
+- name: station_freq
+  id: variable
+  parameters:
+    comment: ''
+    value: '99300000'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [248, 128.0]
+    rotation: 0
+    state: enabled
+- name: tune_offset
+  id: variable
+  parameters:
+    comment: ''
+    value: '250000'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [392, 128.0]
+    rotation: 0
+    state: enabled
 - name: analog_wfm_rcv_0
   id: analog_wfm_rcv
   parameters:
@@ -102,12 +126,12 @@ blocks:
     comment: ''
     maxoutbuf: '0'
     minoutbuf: '0'
-    quad_rate: '240000'
+    quad_rate: analysis_rate
   states:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [784, 736.0]
+    coordinate: [808, 808.0]
     rotation: 0
     state: enabled
 - name: audio_sink_0
@@ -124,31 +148,27 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1224, 748.0]
+    coordinate: [1080, 820.0]
     rotation: 0
     state: enabled
-- name: low_pass_filter_0
-  id: low_pass_filter
+- name: freq_xlating_fir_filter_xxx_0
+  id: freq_xlating_fir_filter_xxx
   parameters:
     affinity: ''
     alias: ''
-    beta: '6.76'
+    center_freq: -tune_offset
     comment: ''
-    cutoff_freq: '100000'
     decim: '10'
-    gain: '1'
-    interp: '1'
     maxoutbuf: '0'
     minoutbuf: '0'
     samp_rate: sample_rate
-    type: fir_filter_ccf
-    width: '20000'
-    win: window.WIN_HAMMING
+    taps: firdes.low_pass(1.0, sample_rate, 100000, 20000, window.WIN_HAMMING)
+    type: ccc
   states:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [472, 496.0]
+    coordinate: [432, 784.0]
     rotation: 0
     state: enabled
 - name: qtgui_freq_sink_x_0
@@ -310,7 +330,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [768, 336.0]
+    coordinate: [808, 920.0]
     rotation: 0
     state: enabled
 - name: qtgui_waterfall_sink_x_0
@@ -371,7 +391,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [776, 528.0]
+    coordinate: [800, 624.0]
     rotation: 0
     state: enabled
 - name: rtlsdr_source_0
@@ -731,13 +751,38 @@ blocks:
     coordinate: [88, 288.0]
     rotation: 0
     state: enabled
+- name: snippet_0
+  id: snippet
+  parameters:
+    alias: ''
+    code: "import json\nfrom pathlib import Path\nfrom datetime import datetime\n\n\
+      repo_root = Path(__file__).resolve().parents[2]\nconfig_dir = repo_root / \"\
+      config\"\nconfig_dir.mkdir(parents=True, exist_ok=True)\n\nconfig = {\n    \"\
+      timestamp\": datetime.now().astimezone().isoformat(timespec=\"seconds\"),\n\
+      \    \"center_frequency_hz\": float(self.center_freq),\n    \"sample_rate_hz\"\
+      : float(self.sample_rate),\n    \"gain_db\": float(self.gain_db),\n    \"fft_size\"\
+      : int(self.fft_size),\n    \"frequency_resolution_hz\": float(self.analysis_rate\
+      \ / self.fft_size),\n    \"window_type\": \"blackman-harris\",\n    \"source_device\"\
+      : \"RTL-SDR EQ-2\"\n}\n\nwith open(config_dir / \"sdr_config.json\", \"w\",\
+      \ encoding=\"utf-8\") as f:\n    json.dump(config, f, indent=2)\n\nprint(\"\
+      SDR config guardada en:\", config_dir / \"sdr_config.json\")"
+    comment: ''
+    priority: '0'
+    section: main_after_init
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [936, 264.0]
+    rotation: 0
+    state: enabled
 
 connections:
 - [analog_wfm_rcv_0, '0', audio_sink_0, '0']
-- [low_pass_filter_0, '0', analog_wfm_rcv_0, '0']
-- [low_pass_filter_0, '0', qtgui_freq_sink_x_0_0, '0']
-- [low_pass_filter_0, '0', qtgui_waterfall_sink_x_0, '0']
-- [rtlsdr_source_0, '0', low_pass_filter_0, '0']
+- [freq_xlating_fir_filter_xxx_0, '0', analog_wfm_rcv_0, '0']
+- [freq_xlating_fir_filter_xxx_0, '0', qtgui_freq_sink_x_0_0, '0']
+- [freq_xlating_fir_filter_xxx_0, '0', qtgui_waterfall_sink_x_0, '0']
+- [rtlsdr_source_0, '0', freq_xlating_fir_filter_xxx_0, '0']
 - [rtlsdr_source_0, '0', qtgui_freq_sink_x_0, '0']
 
 metadata:

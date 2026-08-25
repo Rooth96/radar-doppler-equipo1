@@ -28,6 +28,34 @@ import sip
 import threading
 
 
+def snipfcn_snippet_0(self):
+    import json
+    from pathlib import Path
+    from datetime import datetime
+
+    repo_root = Path(__file__).resolve().parents[2]
+    config_dir = repo_root / "config"
+    config_dir.mkdir(parents=True, exist_ok=True)
+
+    config = {
+        "timestamp": datetime.now().astimezone().isoformat(timespec="seconds"),
+        "center_frequency_hz": float(self.center_freq),
+        "sample_rate_hz": float(self.sample_rate),
+        "gain_db": float(self.gain_db),
+        "fft_size": int(self.fft_size),
+        "frequency_resolution_hz": float(self.analysis_rate / self.fft_size),
+        "window_type": "blackman-harris",
+        "source_device": "RTL-SDR EQ-2"
+    }
+
+    with open(config_dir / "sdr_config.json", "w", encoding="utf-8") as f:
+        json.dump(config, f, indent=2)
+
+    print("SDR config guardada en:", config_dir / "sdr_config.json")
+
+
+def snippets_main_after_init(tb):
+    snipfcn_snippet_0(tb)
 
 class untitled(gr.top_block, Qt.QWidget):
 
@@ -65,10 +93,12 @@ class untitled(gr.top_block, Qt.QWidget):
         ##################################################
         # Variables
         ##################################################
+        self.tune_offset = tune_offset = 250000
+        self.station_freq = station_freq = 99300000
         self.sample_rate = sample_rate = 2400000
         self.gain_db = gain_db = 20
         self.fft_size = fft_size = 32768
-        self.center_freq = center_freq = 99300000
+        self.center_freq = center_freq = station_freq + tune_offset
         self.analysis_rate = analysis_rate = sample_rate/10
 
         ##################################################
@@ -208,18 +238,10 @@ class untitled(gr.top_block, Qt.QWidget):
 
         self._qtgui_freq_sink_x_0_win = sip.wrapinstance(self.qtgui_freq_sink_x_0.qwidget(), Qt.QWidget)
         self.top_layout.addWidget(self._qtgui_freq_sink_x_0_win)
-        self.low_pass_filter_0 = filter.fir_filter_ccf(
-            10,
-            firdes.low_pass(
-                1,
-                sample_rate,
-                100000,
-                20000,
-                window.WIN_HAMMING,
-                6.76))
+        self.freq_xlating_fir_filter_xxx_0 = filter.freq_xlating_fir_filter_ccc(10, firdes.low_pass(1.0, sample_rate, 100000, 20000, window.WIN_HAMMING), (-tune_offset), sample_rate)
         self.audio_sink_0 = audio.sink(48000, '', True)
         self.analog_wfm_rcv_0 = analog.wfm_rcv(
-        	quad_rate=240000,
+        	quad_rate=analysis_rate,
         	audio_decimation=5,
         )
 
@@ -228,10 +250,10 @@ class untitled(gr.top_block, Qt.QWidget):
         # Connections
         ##################################################
         self.connect((self.analog_wfm_rcv_0, 0), (self.audio_sink_0, 0))
-        self.connect((self.low_pass_filter_0, 0), (self.analog_wfm_rcv_0, 0))
-        self.connect((self.low_pass_filter_0, 0), (self.qtgui_freq_sink_x_0_0, 0))
-        self.connect((self.low_pass_filter_0, 0), (self.qtgui_waterfall_sink_x_0, 0))
-        self.connect((self.rtlsdr_source_0, 0), (self.low_pass_filter_0, 0))
+        self.connect((self.freq_xlating_fir_filter_xxx_0, 0), (self.analog_wfm_rcv_0, 0))
+        self.connect((self.freq_xlating_fir_filter_xxx_0, 0), (self.qtgui_freq_sink_x_0_0, 0))
+        self.connect((self.freq_xlating_fir_filter_xxx_0, 0), (self.qtgui_waterfall_sink_x_0, 0))
+        self.connect((self.rtlsdr_source_0, 0), (self.freq_xlating_fir_filter_xxx_0, 0))
         self.connect((self.rtlsdr_source_0, 0), (self.qtgui_freq_sink_x_0, 0))
 
 
@@ -243,13 +265,28 @@ class untitled(gr.top_block, Qt.QWidget):
 
         event.accept()
 
+    def get_tune_offset(self):
+        return self.tune_offset
+
+    def set_tune_offset(self, tune_offset):
+        self.tune_offset = tune_offset
+        self.set_center_freq(self.station_freq + self.tune_offset)
+        self.freq_xlating_fir_filter_xxx_0.set_center_freq((-self.tune_offset))
+
+    def get_station_freq(self):
+        return self.station_freq
+
+    def set_station_freq(self, station_freq):
+        self.station_freq = station_freq
+        self.set_center_freq(self.station_freq + self.tune_offset)
+
     def get_sample_rate(self):
         return self.sample_rate
 
     def set_sample_rate(self, sample_rate):
         self.sample_rate = sample_rate
         self.set_analysis_rate(self.sample_rate/10)
-        self.low_pass_filter_0.set_taps(firdes.low_pass(1, self.sample_rate, 100000, 20000, window.WIN_HAMMING, 6.76))
+        self.freq_xlating_fir_filter_xxx_0.set_taps(firdes.low_pass(1.0, self.sample_rate, 100000, 20000, window.WIN_HAMMING))
         self.qtgui_freq_sink_x_0.set_frequency_range(self.center_freq, self.sample_rate)
         self.rtlsdr_source_0.set_sample_rate(self.sample_rate)
 
@@ -290,7 +327,7 @@ def main(top_block_cls=untitled, options=None):
     qapp = Qt.QApplication(sys.argv)
 
     tb = top_block_cls()
-
+    snippets_main_after_init(tb)
     tb.start()
     tb.flowgraph_started.set()
 
