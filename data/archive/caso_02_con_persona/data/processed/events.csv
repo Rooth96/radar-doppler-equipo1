@@ -1,0 +1,2 @@
+timestamp,doppler_hz,snr_db,peak_power_db,baseline_power_db,excess_db,velocity_est_kmh,active_bins,event_hits,detected
+2026-08-25T19:22:35.107-04:00,-4.578,13.208,-16.668,-29.875,13.208,24.81,4,1,True
