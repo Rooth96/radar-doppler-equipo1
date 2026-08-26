@@ -1,0 +1,16 @@
+{
+  "timestamp": "2026-08-26T11:51:59-04:00",
+  "center_frequency_hz": 99300000.0,
+  "sample_rate_hz": 2400000.0,
+  "gain_db": 20.0,
+  "fft_size": 1024,
+  "frequency_resolution_hz": 0.1953125,
+  "window_type": "blackman-harris",
+  "source_device": "RTL-SDR EQ-2",
+  "scenario": "vehicle_30_kmh",
+  "expected_speed_kmh": 30.0,
+  "expected_max_doppler_hz": 5.5204857755294166,
+  "geometry_factor_note": "Calibrar entre 0 y 2 segun la geometria real",
+  "analysis_sample_rate_hz": 200.0,
+  "tuner_center_frequency_hz": 99550000.0
+}
