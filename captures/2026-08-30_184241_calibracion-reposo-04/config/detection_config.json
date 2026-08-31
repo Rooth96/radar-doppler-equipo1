@@ -1,0 +1,12 @@
+{
+  "detection_mode": "LOW_DOPPLER_PERSISTENT_MULTIBIN",
+  "min_doppler_hz": 0.9,
+  "max_doppler_hz": 10.0,
+  "threshold_db": 8.0,
+  "baseline_instants": 10,
+  "minimum_active_bins": 2,
+  "minimum_hits": 2,
+  "geometry_factor": 2.0,
+  "status": "INITIAL_PROFILE_REQUIRES_CALIBRATION",
+  "case_name": "calibracion reposo 04"
+}

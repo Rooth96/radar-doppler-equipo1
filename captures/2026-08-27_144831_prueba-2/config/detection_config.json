@@ -1,0 +1,8 @@
+{
+  "status": "SIMULATION",
+  "min_doppler_hz": 1.0,
+  "max_doppler_hz": 10.0,
+  "threshold_db": 8.0,
+  "minimum_active_bins": 3,
+  "minimum_hits": 3
+}

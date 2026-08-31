@@ -9,11 +9,11 @@ import pandas as pd
 
 BASE_DIR = Path(__file__).resolve().parents[2]
 
-CASE_DIR = BASE_DIR / "capturas" / "vehiculo" / "prueba_02"
+CASE_DIR = BASE_DIR / "captures" / "2026-08-26_vehiculo-30-kmh"
 
-WATERFALL_FILE = CASE_DIR / "waterfall.csv"
-SPECTRUM_FILE = CASE_DIR / "spectrum_latest.csv"
-CONFIG_FILE = CASE_DIR / "sdr_config.json"
+WATERFALL_FILE = CASE_DIR / "raw" / "waterfall.csv"
+SPECTRUM_FILE = CASE_DIR / "raw" / "spectrum_latest.csv"
+CONFIG_FILE = CASE_DIR / "config" / "sdr_config.json"
 
 
 # ============================================================

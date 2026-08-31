@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "capture_id": "2026-08-25_sin-vehiculo",
+  "name": "Caso 1 — Sin vehículo",
+  "kind": "baseline",
+  "status": "completed",
+  "created_at": "2026-08-25T16:23:23-04:00",
+  "notes": "Captura histórica migrada a la estructura unificada."
+}

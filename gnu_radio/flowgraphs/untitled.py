@@ -18,6 +18,7 @@ from gnuradio import gr
 from gnuradio.fft import window
 import sys
 import signal
+import os
 from PyQt5 import Qt
 from argparse import ArgumentParser
 from gnuradio.eng_arg import eng_float, intx
@@ -31,11 +32,17 @@ import untitled_epy_block_0 as epy_block_0  # embedded python block
 
 def snipfcn_snippet_0(self):
     import json
+    import os
     from pathlib import Path
     from datetime import datetime
 
     repo_root = Path(__file__).resolve().parents[2]
-    config_dir = repo_root / "config"
+    capture_dir_value = os.environ.get("RADAR_CAPTURE_DIR")
+    config_dir = (
+        Path(capture_dir_value).resolve() / "config"
+        if capture_dir_value
+        else repo_root / "config"
+    )
     config_dir.mkdir(parents=True, exist_ok=True)
 
     config = {
@@ -100,7 +107,9 @@ class untitled(gr.top_block, Qt.QWidget):
         self.gain_db = gain_db = 20
         self.fft_size = fft_size = 32768
         self.center_freq = center_freq = station_freq + tune_offset
-        self.analysis_rate = analysis_rate = sample_rate/10
+        # 24 kS/s / 32768 = 0,732 Hz/bin, suficiente para observar
+        # las bandas Doppler lentas usadas por los perfiles del proyecto.
+        self.analysis_rate = analysis_rate = sample_rate/100
 
         ##################################################
         # Blocks
@@ -239,20 +248,13 @@ class untitled(gr.top_block, Qt.QWidget):
 
         self._qtgui_freq_sink_x_0_win = sip.wrapinstance(self.qtgui_freq_sink_x_0.qwidget(), Qt.QWidget)
         self.top_layout.addWidget(self._qtgui_freq_sink_x_0_win)
-        self.freq_xlating_fir_filter_xxx_0 = filter.freq_xlating_fir_filter_ccc(10, firdes.low_pass(1.0, sample_rate, 100000, 20000, window.WIN_HAMMING), (-tune_offset), sample_rate)
+        self.freq_xlating_fir_filter_xxx_0 = filter.freq_xlating_fir_filter_ccc(100, firdes.low_pass(1.0, sample_rate, 10000, 2000, window.WIN_HAMMING), (-tune_offset), sample_rate)
         self.epy_block_0 = epy_block_0.blk(sample_rate=analysis_rate, fft_size=fft_size, update_period=1.0, history_seconds=30.0, export_half_span_hz=5000.0)
-        self.audio_sink_0 = audio.sink(48000, '', True)
-        self.analog_wfm_rcv_0 = analog.wfm_rcv(
-        	quad_rate=analysis_rate,
-        	audio_decimation=5,
-        )
 
 
         ##################################################
         # Connections
         ##################################################
-        self.connect((self.analog_wfm_rcv_0, 0), (self.audio_sink_0, 0))
-        self.connect((self.freq_xlating_fir_filter_xxx_0, 0), (self.analog_wfm_rcv_0, 0))
         self.connect((self.freq_xlating_fir_filter_xxx_0, 0), (self.epy_block_0, 0))
         self.connect((self.freq_xlating_fir_filter_xxx_0, 0), (self.qtgui_freq_sink_x_0_0, 0))
         self.connect((self.freq_xlating_fir_filter_xxx_0, 0), (self.qtgui_waterfall_sink_x_0, 0))
@@ -288,8 +290,8 @@ class untitled(gr.top_block, Qt.QWidget):
 
     def set_sample_rate(self, sample_rate):
         self.sample_rate = sample_rate
-        self.set_analysis_rate(self.sample_rate/10)
-        self.freq_xlating_fir_filter_xxx_0.set_taps(firdes.low_pass(1.0, self.sample_rate, 100000, 20000, window.WIN_HAMMING))
+        self.set_analysis_rate(self.sample_rate/100)
+        self.freq_xlating_fir_filter_xxx_0.set_taps(firdes.low_pass(1.0, self.sample_rate, 10000, 2000, window.WIN_HAMMING))
         self.qtgui_freq_sink_x_0.set_frequency_range(self.center_freq, self.sample_rate)
         self.rtlsdr_source_0.set_sample_rate(self.sample_rate)
 
@@ -338,6 +340,17 @@ def main(top_block_cls=untitled, options=None):
 
     tb.show()
 
+    baseline_value = os.environ.get("RADAR_BASELINE_SECONDS")
+    if baseline_value:
+        baseline_seconds = float(baseline_value)
+        tb.setWindowTitle("RADAR — FASE 1: MANTENER ESCENARIO EN REPOSO")
+
+        def announce_movement_phase():
+            tb.setWindowTitle("RADAR — FASE 2: MOVER OBJETO AHORA")
+            Qt.QApplication.beep()
+
+        Qt.QTimer.singleShot(int(baseline_seconds * 1000), announce_movement_phase)
+
     def sig_handler(sig=None, frame=None):
         tb.stop()
         tb.wait()
@@ -350,6 +363,13 @@ def main(top_block_cls=untitled, options=None):
     timer = Qt.QTimer()
     timer.start(500)
     timer.timeout.connect(lambda: None)
+
+    duration_value = os.environ.get("RADAR_CAPTURE_DURATION_SECONDS")
+    if duration_value:
+        duration_seconds = float(duration_value)
+        if duration_seconds <= 0:
+            raise ValueError("RADAR_CAPTURE_DURATION_SECONDS debe ser mayor que cero")
+        Qt.QTimer.singleShot(int(duration_seconds * 1000), sig_handler)
 
     qapp.exec_()
 

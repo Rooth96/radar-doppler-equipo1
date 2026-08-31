@@ -37,7 +37,7 @@ blocks:
   id: variable
   parameters:
     comment: ''
-    value: sample_rate/10
+    value: sample_rate/100
   states:
     bus_sink: false
     bus_source: false
@@ -434,11 +434,11 @@ blocks:
     alias: ''
     center_freq: -tune_offset
     comment: ''
-    decim: '10'
+    decim: '100'
     maxoutbuf: '0'
     minoutbuf: '0'
     samp_rate: sample_rate
-    taps: firdes.low_pass(1.0, sample_rate, 100000, 20000, window.WIN_HAMMING)
+    taps: firdes.low_pass(1.0, sample_rate, 10000, 2000, window.WIN_HAMMING)
     type: ccc
   states:
     bus_sink: false
@@ -1365,12 +1365,10 @@ blocks:
     state: enabled
 
 connections:
-- [analog_wfm_rcv_0, '0', audio_sink_0, '0']
 - [blocks_complex_to_mag_squared_0, '0', low_pass_filter_0_0, '0']
 - [dc_blocker_xx_0, '0', qtgui_freq_sink_x_0_0_0, '0']
 - [dc_blocker_xx_0, '0', qtgui_time_sink_x_0, '0']
 - [dc_blocker_xx_0, '0', qtgui_waterfall_sink_x_0_0, '0']
-- [freq_xlating_fir_filter_xxx_0, '0', analog_wfm_rcv_0, '0']
 - [freq_xlating_fir_filter_xxx_0, '0', blocks_complex_to_mag_squared_0, '0']
 - [freq_xlating_fir_filter_xxx_0, '0', low_pass_filter_0, '0']
 - [low_pass_filter_0, '0', epy_block_0, '0']

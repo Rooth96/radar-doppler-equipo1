@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "capture_id": "2026-08-30_144636_calibracion-reposo-y-movimiento",
+  "name": "Calibracion reposo y movimiento",
+  "kind": "human",
+  "status": "completed",
+  "created_at": "2026-08-30T14:46:36-04:00",
+  "notes": "10 segundos de reposo seguidos por 15 segundos de movimiento conocido",
+  "updated_at": "2026-08-30T14:47:13-04:00"
+}

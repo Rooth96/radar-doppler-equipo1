@@ -1,0 +1,287 @@
+GUÍA DE INSTALACIÓN Y USO LOCAL
+RADAR DOPPLER PASIVO MONOCANAL
+
+
+1. CONTENIDO DEL PROYECTO
+
+El proyecto contiene la aplicación de adquisición, procesamiento y visualización desarrollada para el radar Doppler pasivo monocanal. Las carpetas principales son:
+
+- captures: capturas experimentales, configuraciones, datos originales y resultados.
+- config: configuraciones generales del sistema.
+- docs: documentación técnica.
+- gnu_radio: flowgraphs y bloques utilizados para adquirir la señal.
+- python_processing: módulos históricos de procesamiento y pruebas.
+- radar_app: administración de capturas, procesamiento, validación y orquestación.
+- streamlit_dashboard: interfaz gráfica de la aplicación.
+- requirements.txt: dependencias necesarias para ejecutar el dashboard.
+
+
+2. REQUISITOS PARA REVISAR LAS CAPTURAS EXISTENTES
+
+Para visualizar y analizar las capturas ya incluidas se requiere:
+
+- Windows 10 u 11.
+- Python 3.12 recomendado.
+- El proyecto descomprimido en una carpeta con permisos de escritura.
+- Conexión a Internet durante la instalación inicial de las dependencias.
+
+No es necesario conectar el RTL-SDR ni instalar GNU Radio si solamente se desea revisar las capturas y resultados existentes.
+
+
+3. PREPARACIÓN DEL ENTORNO PYTHON
+
+Descomprimir el ZIP completo en una carpeta local. Evitar ejecutar la aplicación directamente desde el archivo comprimido.
+
+Abrir PowerShell dentro de la carpeta raíz del proyecto. Esta corresponde a la carpeta donde se encuentran requirements.txt, captures y streamlit_dashboard.
+
+Crear un entorno virtual:
+
+py -m venv .venv
+
+Activar el entorno virtual:
+
+.\.venv\Scripts\Activate.ps1
+
+Si PowerShell impide ejecutar el script de activación, utilizar temporalmente:
+
+Set-ExecutionPolicy -Scope Process Bypass
+.\.venv\Scripts\Activate.ps1
+
+Actualizar pip:
+
+python -m pip install --upgrade pip
+
+Instalar las dependencias:
+
+python -m pip install -r requirements.txt
+
+
+4. EJECUCIÓN DEL DASHBOARD
+
+Con el entorno virtual activado y PowerShell ubicado en la raíz del proyecto, ejecutar:
+
+python -m streamlit run streamlit_dashboard/app.py
+
+Streamlit debería abrir automáticamente el navegador. Si esto no ocurre, ingresar manualmente a:
+
+http://localhost:8501
+
+La terminal de PowerShell debe permanecer abierta mientras se utiliza la aplicación.
+
+Para detener el dashboard, regresar a PowerShell y presionar:
+
+Ctrl+C
+
+
+5. FUNCIONES DISPONIBLES SIN HARDWARE
+
+Sin conectar el RTL-SDR es posible:
+
+- Revisar todas las capturas incluidas.
+- Seleccionar cada caso experimental.
+- Visualizar espectro y waterfall.
+- Consultar los parámetros de configuración.
+- Revisar eventos y resultados de detección.
+- Registrar o corregir una validación manual.
+- Consultar el resumen global de validación.
+- Visualizar la matriz de confusión.
+- Crear y ejecutar capturas simuladas.
+
+
+6. REQUISITOS ADICIONALES PARA REALIZAR CAPTURAS
+
+Para utilizar el RTL-SDR y generar nuevas capturas se requiere adicionalmente:
+
+- RTL-SDR conectado al computador.
+- Antena conectada al receptor.
+- Radioconda instalado.
+- GNU Radio y gr-osmosdr disponibles dentro de Radioconda.
+- Controlador WinUSB instalado para el RTL-SDR, normalmente mediante Zadig.
+
+La aplicación busca automáticamente el intérprete de Radioconda en:
+
+C:\Users\<usuario>\radioconda\python.exe
+
+La ruta real cambia según el nombre de usuario de Windows.
+
+
+7. COMPROBACIÓN DEL RTL-SDR
+
+Antes de abrir GNU Radio, conectar el dispositivo y cerrar cualquier programa que pueda estar utilizándolo, por ejemplo:
+
+- GQRX.
+- GNU Radio Companion.
+- Otra instancia del dashboard que esté capturando.
+- rtl_sdr o rtl_test ejecutándose en otra terminal.
+
+Para comprobar el receptor desde PowerShell:
+
+& "$env:USERPROFILE\radioconda\Library\bin\rtl_test.exe" -t
+
+Una respuesta esperada es similar a:
+
+Found 1 device(s)
+Using device 0: Generic RTL2832U OEM
+Found Fitipower FC0012 tuner
+
+Si el equipo utiliza un sintonizador FC0012, la herramienta puede finalizar indicando que no encontró un sintonizador E4000. Ese mensaje no significa necesariamente que el RTL-SDR esté defectuoso; la opción de prueba intenta ejecutar una verificación específica para E4000 después de haber reconocido correctamente el FC0012.
+
+
+8. USO DE UNA CAPTURA REAL
+
+Procedimiento:
+
+1. Conectar el RTL-SDR y la antena.
+2. Abrir el dashboard.
+3. En la barra lateral, desplegar “Nueva captura”.
+4. Asignar un nombre descriptivo.
+5. Seleccionar el tipo de ensayo.
+6. Agregar notas si corresponde.
+7. Crear la captura.
+8. Seleccionar la captura recién creada.
+9. Escoger la duración de adquisición.
+10. Pulsar “Iniciar con RTL-SDR”.
+11. Esperar que aparezca la ventana de GNU Radio.
+12. Seguir las instrucciones de esa ventana.
+
+Durante la FASE 1 se debe mantener el escenario en reposo. Esta etapa permite construir el baseline.
+
+Cuando la ventana cambie a FASE 2 y emita el aviso, se debe efectuar el movimiento planificado. Para un ensayo negativo se debe mantener el reposo durante toda la captura.
+
+Al terminar el tiempo configurado, GNU Radio se cerrará automáticamente. La aplicación guardará los datos originales, ejecutará el procesamiento y mostrará el resultado.
+
+Finalmente, registrar lo que realmente ocurrió mediante uno de los botones:
+
+- Se observó movimiento.
+- No se observó movimiento.
+
+La validación debe representar la condición efectivamente observada y no solamente la condición sugerida por el nombre de la captura.
+
+
+9. ORGANIZACIÓN DE LAS CAPTURAS
+
+Cada ensayo se almacena en:
+
+captures\<identificador_de_captura>
+
+La estructura general es:
+
+metadata.json
+config\sdr_config.json
+config\detection_config.json
+raw\spectrum_latest.csv
+raw\waterfall.csv
+processed\detection_latest.json
+processed\events.csv
+processed\metrics.json
+processed\ground_truth.csv
+
+Los archivos dentro de raw corresponden a la evidencia original generada por GNU Radio. No deben modificarse manualmente. Los archivos processed pueden regenerarse mediante el procesamiento sin alterar los datos originales.
+
+
+10. FRECUENCIA UTILIZADA
+
+El flowgraph operacional fue configurado considerando una emisora de referencia en 99,3 MHz y un offset de sintonización de 250 kHz.
+
+Por esta razón, la frecuencia central mostrada por el dashboard es:
+
+99,3 MHz + 0,25 MHz = 99,55 MHz
+
+La frecuencia de 99,55 MHz corresponde al centro del RTL-SDR, no necesariamente a la frecuencia comercial de la emisora. GNU Radio traslada digitalmente la emisora situada 250 kHz por debajo hasta el centro del análisis.
+
+Antes de utilizar el sistema en otra ubicación se debe verificar que exista una emisora adecuada en la frecuencia configurada. Esto puede comprobarse mediante GQRX, seleccionando demodulación WFM y confirmando la presencia de una señal FM ancha, estable y con audio inteligible.
+
+
+11. CONSIDERACIONES DE INTERPRETACIÓN
+
+- La velocidad mostrada por el perfil humano es una velocidad equivalente calculada con una geometría ideal simplificada.
+- No corresponde necesariamente a la velocidad física real del brazo, objeto o persona.
+- El sistema monocanal no mide distancia ni ángulo de llegada.
+- El signo Doppler no debe interpretarse automáticamente como acercamiento o alejamiento sin una geometría calibrada.
+- Las tasas de desempeño solo incluyen capturas con validación manual.
+- Una captura no validada puede revisarse, pero no debe incorporarse a las métricas globales.
+- El sistema presentó mejor detectabilidad experimental frente a objetos metálicos que frente a movimiento corporal sin metal.
+
+
+12. SOLUCIÓN DE PROBLEMAS FRECUENTES
+
+Problema: “python” o “streamlit” no se reconoce.
+
+Solución: comprobar que el entorno virtual esté activado y ejecutar:
+
+python -m streamlit run streamlit_dashboard/app.py
+
+
+Problema: faltan pandas, plotly o streamlit.
+
+Solución:
+
+python -m pip install -r requirements.txt
+
+
+Problema: GNU Radio no aparece preparado.
+
+Solución: comprobar que Radioconda se encuentre instalado en la carpeta del usuario y que exista:
+
+%USERPROFILE%\radioconda\python.exe
+
+
+Problema: el RTL-SDR está ocupado.
+
+Solución: cerrar GQRX, GNU Radio Companion y cualquier otra aplicación que esté utilizando el dispositivo. Desconectarlo y volverlo a conectar si fuese necesario.
+
+
+Problema: no se detectan emisoras o el espectro no corresponde a la zona.
+
+Solución: comprobar la frecuencia local con GQRX y revisar station_freq y tune_offset antes de efectuar nuevas pruebas.
+
+
+Problema: una captura indica movimiento cuando no lo hubo, o no detecta un movimiento débil.
+
+Solución: no modificar inmediatamente los umbrales. Registrar primero la observación real en el dashboard y reunir varias capturas comparables antes de recalibrar.
+
+
+13. COMANDOS RESUMIDOS
+
+Preparación inicial:
+
+py -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+
+Ejecución del dashboard:
+
+python -m streamlit run streamlit_dashboard/app.py
+
+Dirección local:
+
+http://localhost:8501
+
+Detención:
+
+Ctrl+C
+
+
+14. CONTENIDO RECOMENDADO DEL ZIP
+
+Incluir:
+
+- captures
+- config
+- docs
+- gnu_radio
+- python_processing
+- radar_app
+- streamlit_dashboard
+- requirements.txt
+- README.md
+
+No es necesario incluir:
+
+- .venv
+- __pycache__
+- .git
+
+La carpeta captures debe incluirse si se desea que los demás integrantes puedan revisar los ensayos y resultados obtenidos durante el desarrollo.
+

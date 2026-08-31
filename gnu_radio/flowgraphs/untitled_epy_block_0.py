@@ -309,9 +309,11 @@ class blk(gr.sync_block):
         if self.paths_initialized:
             return True
 
-        repo_root = self._find_repo_root()
+        capture_dir_value = os.environ.get("RADAR_CAPTURE_DIR")
+        capture_dir = Path(capture_dir_value).resolve() if capture_dir_value else None
+        repo_root = self._find_repo_root() if capture_dir is None else None
 
-        if repo_root is None:
+        if capture_dir is None and repo_root is None:
 
             if not self.path_error_reported:
 
@@ -341,9 +343,9 @@ class blk(gr.sync_block):
         self.repo_root = repo_root
 
         self.realtime_dir = (
-            self.repo_root
-            / "data"
-            / "realtime"
+            capture_dir / "raw"
+            if capture_dir is not None
+            else self.repo_root / "data" / "realtime"
         )
 
         self.realtime_dir.mkdir(
@@ -364,12 +366,8 @@ class blk(gr.sync_block):
         self.paths_initialized = True
 
         print("")
-        print(
-            "Repositorio detectado:"
-        )
-        print(
-            self.repo_root
-        )
+        print("Destino de captura:")
+        print(capture_dir if capture_dir is not None else self.repo_root)
         print("")
         print(
             "Spectrum CSV:"

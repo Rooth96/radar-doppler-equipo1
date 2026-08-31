@@ -1,0 +1,1 @@
+timestamp,event_start,event_end,doppler_hz,snr_db,excess_db,active_bins,event_hits,velocity_est_kmh,detected

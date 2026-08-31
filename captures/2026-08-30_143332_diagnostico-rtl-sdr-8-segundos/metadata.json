@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "capture_id": "2026-08-30_143332_diagnostico-rtl-sdr-8-segundos",
+  "name": "Diagnóstico RTL-SDR 8 segundos",
+  "kind": "human",
+  "status": "captured",
+  "created_at": "2026-08-30T14:33:32-04:00",
+  "notes": "Prueba supervisada de integración GNU Radio",
+  "updated_at": "2026-08-30T14:34:18-04:00"
+}

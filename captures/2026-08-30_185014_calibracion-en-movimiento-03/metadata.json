@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "capture_id": "2026-08-30_185014_calibracion-en-movimiento-03",
+  "name": "calibracion en movimiento 03",
+  "kind": "human",
+  "status": "completed",
+  "created_at": "2026-08-30T18:50:14-04:00",
+  "notes": "Movimiento con objeto metálico; detectado.",
+  "expected_movement": true,
+  "acquisition_mode": "rtl_sdr",
+  "requested_duration_seconds": 25.0,
+  "baseline_seconds": 10.0,
+  "updated_at": "2026-08-30T19:00:42-04:00"
+}

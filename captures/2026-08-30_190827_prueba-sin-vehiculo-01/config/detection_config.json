@@ -1,0 +1,12 @@
+{
+  "detection_mode": "VEHICLE_LOW_DOPPLER_PERSISTENT_MULTIBIN",
+  "min_doppler_hz": 1.0,
+  "max_doppler_hz": 10.0,
+  "threshold_db": 8.0,
+  "baseline_instants": 10,
+  "minimum_active_bins": 4,
+  "minimum_hits": 3,
+  "geometry_factor": null,
+  "status": "INITIAL_PROFILE_REQUIRES_CALIBRATION",
+  "case_name": "prueba sin vehiculo 01"
+}

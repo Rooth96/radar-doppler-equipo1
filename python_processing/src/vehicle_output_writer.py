@@ -23,9 +23,8 @@ BASE_DIR = Path(__file__).resolve().parents[2]
 
 CASE_DIR = (
     BASE_DIR
-    / "capturas"
-    / "vehiculo"
-    / "prueba_02"
+    / "captures"
+    / "2026-08-26_vehiculo-30-kmh"
 )
 
 PROCESSED_DIR = CASE_DIR / "processed"
@@ -46,7 +45,7 @@ METRICS_FILE = (
 )
 
 DETECTION_CONFIG_FILE = (
-    CASE_DIR
+    CASE_DIR / "config"
     / "detection_config.json"
 )
 

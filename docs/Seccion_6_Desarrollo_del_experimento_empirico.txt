@@ -1,0 +1,136 @@
+6. DESARROLLO DEL EXPERIMENTO EMPÍRICO
+
+El desarrollo experimental se ejecutó de manera progresiva. Las primeras pruebas permitieron verificar la recepción de la emisora FM, observar el comportamiento del espectro en reposo y comprobar la integración inicial entre GNU Radio, el procesamiento en Python y el dashboard. Posteriormente se efectuó una tercera campaña con un automóvil en movimiento en dependencias de la Academia Politécnica Militar (ACAPOMIL). Finalmente, una vez desarrollada la aplicación integrada, se realizó una serie controlada de capturas de reposo y movimiento para evaluar la repetibilidad del detector y registrar ground truth manual.
+
+Esta organización permitió separar tres objetivos diferentes: comprobar la recepción y el flujo de datos; verificar si un blanco vehicular real producía actividad Doppler observable; y evaluar sistemáticamente el desempeño del perfil de detección mediante múltiples capturas etiquetadas.
+
+
+6.1. Preparación general de los ensayos
+
+El sistema experimental estuvo compuesto por un receptor RTL-SDR basado en RTL2832U con sintonizador Fitipower FC0012, una antena receptora, un computador con Radioconda y GNU Radio, el módulo de procesamiento desarrollado en Python y el dashboard implementado en Streamlit. Como iluminador de oportunidad se utilizó una emisora de radiodifusión FM.
+
+Antes de cada ensayo se verificó la disponibilidad del receptor y se comprobó que ninguna otra aplicación estuviera utilizando el dispositivo. GNU Radio efectuó la adquisición de la señal, la traslación de la emisora a banda base, el filtrado, la reducción de tasa y la generación del espectro y waterfall. Los archivos originales fueron almacenados dentro de una carpeta independiente para cada captura. Al finalizar la adquisición, el módulo Python procesó automáticamente los datos y el dashboard presentó el resultado.
+
+Cada captura quedó organizada mediante la siguiente estructura:
+
+- metadata.json: identificación, nombre, tipo, fecha y estado del ensayo.
+- config/sdr_config.json: parámetros empleados por el receptor y el análisis espectral.
+- config/detection_config.json: banda Doppler, umbral, bins mínimos y persistencia.
+- raw/spectrum_latest.csv: último espectro generado durante la captura.
+- raw/waterfall.csv: historial espectral completo y datos originales del ensayo.
+- processed/detection_latest.json: decisión y parámetros del evento representativo.
+- processed/events.csv: eventos aceptados por el detector.
+- processed/metrics.json: indicadores derivados del procesamiento.
+- processed/ground_truth.csv: observación manual utilizada para validar el resultado.
+
+La conservación separada de los archivos raw y processed permitió reprocesar una captura sin modificar la evidencia original obtenida por GNU Radio.
+
+
+6.2. Ensayos preliminares
+
+Los ensayos iniciales descritos previamente en este informe tuvieron como finalidad comprobar la factibilidad del montaje y observar el comportamiento del espectro ante condiciones de reposo y movimiento. La condición sin blanco móvil se utilizó para caracterizar el fondo y determinar si existían variaciones espontáneas que pudieran ser confundidas con Doppler.
+
+Las primeras pasadas con blancos móviles presentaron una respuesta poco consistente. En algunos intentos no se observaron variaciones claramente diferenciables respecto de la señal directa. Este resultado motivó sucesivos ajustes de ganancia, resolución espectral, banda Doppler y organización del procesamiento. También evidenció la sensibilidad del montaje a la geometría entre el iluminador, el blanco y el receptor.
+
+[MANTENER AQUÍ LAS FOTOGRAFÍAS, CAPTURAS Y DESCRIPCIONES DE LOS DOS PRIMEROS EXPERIMENTOS YA INCLUIDOS EN EL INFORME]
+
+
+6.3. Tercera campaña: vehículo en movimiento en ACAPOMIL
+
+La tercera campaña experimental se desarrolló en dependencias de la Academia Politécnica Militar. En esta prueba se utilizó un automóvil como blanco móvil y se estableció una velocidad de referencia aproximada de 30 km/h durante su paso por la zona observada.
+
+Los 30 km/h corresponden a una condición conocida o aproximada del ensayo y no a una velocidad medida directamente por el radar. Esta distinción es necesaria porque el montaje monocanal no determina los ángulos de la geometría biestática y, por tanto, no permite convertir el desplazamiento Doppler en una velocidad física exacta sin una calibración geométrica adicional.
+
+Antes del paso del automóvil se registraron diez instantes de reposo, utilizados para construir el baseline espectral. Posteriormente el vehículo se desplazó por la zona de prueba mientras GNU Radio mantuvo la captura. En total se obtuvieron cuarenta instantes espectrales. Para este caso se utilizó una banda Doppler entre 1,0 y 6,5 Hz, un umbral de 8 dB, un mínimo de cuatro bins activos y una persistencia mínima de tres instantes consecutivos.
+
+El procesador identificó un evento compatible con actividad Doppler vehicular. El evento se extendió aproximadamente entre las 11:52:37 y las 11:52:41, con un Doppler representativo de 1,367 Hz. El exceso sobre el baseline fue de 23,16 dB, se contabilizaron doce bins activos y la condición de detección se mantuvo durante nueve instantes, superando los mínimos configurados de cuatro bins y tres instantes.
+
+La aplicación declaró movimiento y registró un evento válido. No se presentó una velocidad calculada por el sistema, debido a que la geometría biestática no se encontraba calibrada. En consecuencia, el resultado debe expresarse como detección de un evento Doppler durante una prueba con un vehículo cuya velocidad de referencia era aproximadamente 30 km/h, y no como una medición radar de 30 km/h.
+
+La prueba demostró que el montaje era capaz de registrar una perturbación espectral persistente durante el paso de un blanco vehicular. Sin embargo, debido a la arquitectura monocanal, no fue posible separar coherentemente una señal de referencia y una señal de vigilancia ni efectuar cancelación adaptativa de la señal directa. La correspondencia temporal entre el evento y el paso del automóvil fue establecida a partir del procedimiento experimental, pero debe entenderse dentro de las limitaciones de sincronización y geometría del montaje.
+
+[INSERTAR FIGURA X. Disposición del RTL-SDR, antena y trayectoria del automóvil en ACAPOMIL]
+
+[INSERTAR FIGURA X. Automóvil utilizado como blanco móvil durante la prueba a velocidad aproximada de 30 km/h]
+
+[INSERTAR FIGURA X. Captura del dashboard correspondiente al evento vehicular detectado]
+
+[INSERTAR FIGURA X. Espectro o waterfall del evento vehicular]
+
+Pie sugerido: “Tercera campaña experimental realizada en ACAPOMIL con un automóvil a velocidad de referencia aproximada de 30 km/h. Fuente: elaboración propia”.
+
+
+6.4. Integración de la aplicación y protocolo de captura
+
+Después de la campaña vehicular se reorganizó la aplicación para eliminar el traslado manual de archivos entre GNU Radio, Python y Streamlit. Cada ensayo pasó a ser administrado como una captura autocontenida. Desde el dashboard se asignó un nombre al caso, se ejecutó GNU Radio, se almacenaron los datos originales, se inició automáticamente el procesamiento y se presentó el resultado dentro del mismo selector de capturas.
+
+Para sincronizar la fase de reposo con la fase de movimiento, la ventana de GNU Radio presentó dos estados. Durante la “FASE 1” se mantuvo el escenario sin movimiento para construir el baseline. Después de diez instantes, la ventana cambió a “FASE 2” y emitió un aviso para comenzar el desplazamiento del blanco. El protocolo evitó utilizar como referencia el momento de pulsar el botón del dashboard, debido a que la inicialización de Radioconda y GNU Radio introduce un retardo antes de comenzar a generar datos RF.
+
+La configuración final del perfil humano consideró una banda de 0,9 a 10 Hz, un umbral de exceso localizado de 8 dB, un mínimo de dos bins activos y una persistencia mínima de dos instantes consecutivos. Cada captura tuvo una duración nominal de 25 segundos, con diez instantes iniciales destinados al baseline y el tiempo restante para evaluar movimiento o mantener el reposo, según el tipo de prueba.
+
+Al finalizar cada ensayo, el operador registró en el dashboard si efectivamente se había observado movimiento. La aplicación comparó esa observación con la predicción automática y clasificó el resultado como verdadero positivo, verdadero negativo, falso positivo o falso negativo.
+
+
+6.5. Serie controlada de cinco capturas sin movimiento
+
+La primera parte de la serie de validación consistió en cinco capturas de reposo. Aunque se utilizó el mismo protocolo temporal que para los ensayos positivos, durante toda la adquisición se mantuvo el escenario sin movimiento intencional. El propósito fue comprobar la estabilidad del detector y determinar si las fluctuaciones del iluminador, el ruido o los cambios generales de potencia eran interpretados erróneamente como movimiento.
+
+Resultados de la serie de reposo:
+
+- Calibración reposo 01: el sistema no detectó movimiento; no se observó movimiento. Resultado: verdadero negativo.
+- Calibración reposo 02: el sistema no detectó movimiento; no se observó movimiento. Resultado: verdadero negativo.
+- Calibración reposo 03: el sistema no detectó movimiento; no se observó movimiento. Resultado: verdadero negativo.
+- Calibración reposo 04: el sistema no detectó movimiento; no se observó movimiento. Resultado: verdadero negativo.
+- Calibración reposo 05: el sistema no detectó movimiento; no se observó movimiento. Resultado: verdadero negativo.
+
+Las cinco capturas fueron clasificadas como verdaderos negativos. Durante esta serie no se registraron falsos positivos. Este comportamiento indicó que los criterios de exceso localizado, bins activos y persistencia proporcionaron estabilidad frente a las variaciones presentes en el escenario de reposo.
+
+[INSERTAR FIGURA X. Dashboard de una captura representativa sin movimiento]
+
+[INSERTAR FIGURA X. Waterfall representativo del escenario en reposo]
+
+
+6.6. Serie planificada de cinco capturas con movimiento
+
+La segunda parte se planificó como una serie de cinco capturas con movimiento durante la fase de evaluación. No obstante, la observación real del protocolo mostró diferencias entre los ensayos, las cuales se conservaron en el ground truth en vez de asignar automáticamente la condición esperada a partir del nombre de la captura.
+
+Resultados de la serie planificada con movimiento:
+
+- Calibración en movimiento 01: se realizó movimiento del brazo sin utilizar un objeto metálico. El sistema no declaró movimiento. Resultado: falso negativo.
+- Calibración en movimiento 02: se realizó movimiento utilizando un objeto metálico. El sistema declaró movimiento. Resultado: verdadero positivo.
+- Calibración en movimiento 03: se realizó movimiento utilizando un objeto metálico. El sistema declaró movimiento. Resultado: verdadero positivo.
+- Calibración en movimiento 04: por una omisión durante la ejecución no se efectuó movimiento en la fase de evaluación. El sistema no declaró movimiento. Debido a que la condición realmente observada fue reposo, el resultado se clasificó como verdadero negativo y no como falso negativo.
+- Calibración en movimiento 05: se realizó movimiento utilizando un objeto metálico. El sistema declaró movimiento. Resultado: verdadero positivo.
+
+Esta serie mostró la importancia de diferenciar entre la condición planificada y lo que efectivamente ocurrió durante cada captura. El nombre “en movimiento” no fue utilizado como ground truth; la clasificación se basó en la observación manual. Así se evitó atribuir al detector un error en el cuarto ensayo, en el cual no se ejecutó el movimiento previsto.
+
+Los tres ensayos con objeto metálico fueron detectados, mientras que el movimiento del brazo sin metal no fue identificado en esta serie. El resultado sugirió que la reflectividad del blanco influye en la detectabilidad del montaje. Sin embargo, esta observación no se consideró suficiente por sí sola para establecer una conclusión general, razón por la cual se realizaron ensayos complementarios sin objeto metálico.
+
+[INSERTAR FIGURA X. Captura del dashboard correspondiente a un verdadero positivo con objeto metálico]
+
+[INSERTAR FIGURA X. Captura del dashboard correspondiente al falso negativo con movimiento del brazo]
+
+
+6.7. Ensayos complementarios con movimiento sin objeto metálico
+
+Con el propósito de explorar la diferencia observada entre el movimiento corporal y el movimiento de un reflector metálico, se realizaron tres capturas adicionales sin utilizar metal. En todos los casos se confirmó manualmente que existió movimiento durante la fase de evaluación.
+
+Resultados de los ensayos complementarios:
+
+- Movimiento sin metal 01: hubo movimiento, pero el sistema no lo detectó. Resultado: falso negativo.
+- Movimiento sin metal 02: hubo movimiento y el sistema lo detectó. Resultado: verdadero positivo.
+- Movimiento sin metal 03: hubo movimiento, pero el sistema no lo detectó. Resultado: falso negativo.
+
+Considerando estos tres ensayos junto con el movimiento inicial del brazo, el sistema detectó uno de cuatro casos de movimiento corporal sin metal. En contraste, detectó los tres ensayos realizados con objeto metálico dentro de la serie principal. Esta diferencia constituye un resultado exploratorio coherente con la mayor respuesta reflectiva esperada de determinados objetos metálicos, pero debe interpretarse con cautela debido al número limitado de pruebas y a la influencia de la posición, orientación, trayectoria y velocidad del blanco.
+
+[INSERTAR FIGURA X. Comparación representativa entre capturas con y sin objeto metálico]
+
+
+6.8. Consolidación de la evidencia experimental
+
+El conjunto de pruebas permitió avanzar desde observaciones aisladas hacia un procedimiento reproducible y trazable. La campaña vehicular confirmó la presencia de un evento Doppler persistente durante el paso de un automóvil a velocidad de referencia aproximada de 30 km/h. La serie posterior permitió evaluar el detector bajo condiciones repetidas de reposo, movimiento con metal y movimiento corporal sin metal.
+
+Los datos originales de cada ensayo permanecieron almacenados de manera independiente y las observaciones manuales quedaron vinculadas a las predicciones automáticas. Esto permitió separar los errores del detector de los incumplimientos del protocolo y proporcionó la información necesaria para calcular las métricas globales de validación que se presentan en la sección siguiente.
+
+La etapa empírica también puso en evidencia las limitaciones del prototipo. La detección depende de la geometría entre el iluminador, el blanco y el receptor; de la reflectividad del objeto; de la estabilidad de la emisora FM; y de la capacidad del sistema monocanal para distinguir una perturbación localizada respecto de la señal directa. Por lo tanto, los resultados obtenidos demuestran factibilidad experimental bajo las condiciones ensayadas, pero no deben extrapolarse como una capacidad universal de detección.
+

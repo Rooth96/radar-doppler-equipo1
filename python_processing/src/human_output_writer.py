@@ -18,14 +18,12 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 CASE_DIR = (
     PROJECT_ROOT
-    / "data"
-    / "archive"
-    / "caso_02_con_persona"
+    / "captures"
+    / "2026-08-25_persona-en-movimiento"
 )
 
 PROCESSED_DIR = (
     CASE_DIR
-    / "data"
     / "processed"
 )
 

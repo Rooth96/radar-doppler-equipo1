@@ -1,0 +1,18 @@
+{
+  "total_events": 0,
+  "average_snr_db": 0.0,
+  "max_doppler_hz": 0.0,
+  "max_velocity_kmh": 0.0,
+  "total_instants": 24,
+  "baseline_instants": 10,
+  "evaluated_instants": 14,
+  "detection_rate_percent": null,
+  "false_positive_rate_percent": 0.0,
+  "false_positives": 0,
+  "validation_status": "VALIDATED_MANUALLY",
+  "true_positives": 0,
+  "true_negatives": 1,
+  "false_negatives": 0,
+  "validated_trials": 1,
+  "accuracy_percent": 100.0
+}

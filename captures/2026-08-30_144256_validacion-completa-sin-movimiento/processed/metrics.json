@@ -1,0 +1,13 @@
+{
+  "total_events": 1,
+  "average_snr_db": 13.473,
+  "max_doppler_hz": 83.496,
+  "max_velocity_kmh": 452.6,
+  "total_instants": 14,
+  "baseline_instants": 5,
+  "evaluated_instants": 9,
+  "detection_rate_percent": null,
+  "false_positive_rate_percent": null,
+  "false_positives": null,
+  "validation_status": "PENDING_GROUND_TRUTH"
+}

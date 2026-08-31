@@ -13,8 +13,8 @@ El flowgraph estable `gnu_radio/flowgraphs/radar_capture.grc` no se modifica.
 La ejecución crea o actualiza exactamente estos tres archivos dentro de la carpeta del caso:
 
 - `caso_02_vehiculo_30kmh/config/sdr_config.json`
-- `caso_02_vehiculo_30kmh/data/realtime/spectrum_latest.csv`
-- `caso_02_vehiculo_30kmh/data/realtime/waterfall.csv`
+- `captures/2026-08-26_vehiculo-30-kmh/raw/spectrum_latest.csv`
+- `captures/2026-08-26_vehiculo-30-kmh/raw/waterfall.csv`
 
 Los dos CSV conservan el contrato acordado:
 

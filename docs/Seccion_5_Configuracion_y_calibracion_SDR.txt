@@ -1,0 +1,192 @@
+5. CONFIGURACIÓN Y CALIBRACIÓN DEL SDR
+
+La configuración del receptor se definió a partir de la necesidad de observar desplazamientos Doppler de pocos hertz alrededor de una señal de radiodifusión FM empleada como iluminador de oportunidad. El proceso de calibración no consistió únicamente en seleccionar valores nominales del RTL-SDR, sino en coordinar la adquisición de radiofrecuencia, la traslación digital de frecuencia, la reducción de la tasa de muestreo, el análisis mediante FFT y los criterios utilizados posteriormente por el detector implementado en Python. El objetivo fue conservar la estabilidad de la recepción directa y, al mismo tiempo, obtener una resolución suficiente para distinguir variaciones espectrales pequeñas asociadas a blancos móviles.
+
+El flujo operacional se compone de una fuente RTL-SDR, un filtro de traslación en frecuencia, una etapa de decimación, visualizadores espectrales y un bloque encargado de exportar los resultados. Este último conserva en cada captura el espectro más reciente y el historial waterfall. Los primeros instantes de cada ensayo se utilizan como referencia de reposo; por ello, la calibración comprende tanto parámetros del hardware como parámetros del procesamiento digital.
+
+En la versión operacional se priorizó la rama de análisis espectral Doppler. Aunque durante las primeras etapas puede utilizarse una demodulación WBFM para comprobar auditivamente la sintonización de la emisora, esta función no resulta necesaria para la detección final. La tasa requerida para obtener audio no coincide con la tasa reducida seleccionada para alcanzar alta resolución Doppler, razón por la cual el procesamiento definitivo se concentró en la rama espectral.
+
+
+5.1. Selección de la frecuencia y sintonización desplazada
+
+La emisora utilizada como iluminador de oportunidad se encuentra en 99,3 MHz. Sin embargo, el dashboard presenta una frecuencia central del SDR de 99,55 MHz. Esta diferencia no corresponde a la utilización de otra emisora, sino a una estrategia de sintonización desplazada. El receptor se configura 250 kHz por encima de la frecuencia de interés y posteriormente GNU Radio utiliza un filtro Frequency Xlating FIR para trasladar digitalmente la emisora hasta el centro de la señal de análisis.
+
+La relación utilizada es:
+
+f_c,SDR = f_emisora + f_offset
+
+f_c,SDR = 99,3 MHz + 0,25 MHz = 99,55 MHz
+
+Esta técnica evita ubicar la emisora exactamente en el centro de continua del RTL-SDR, zona susceptible a la presencia de offset DC y fuga del oscilador local. Después de efectuar la traslación digital, el análisis se expresa mediante desplazamientos de frecuencia respecto de la referencia. Por este motivo, los bins positivos y negativos presentados por el dashboard representan offsets alrededor de la señal de referencia y no frecuencias absolutas de radiodifusión.
+
+
+5.2. Frecuencia de muestreo y reducción de tasa
+
+La adquisición desde el RTL-SDR se configuró con un sample rate de 2,4 MS/s. Esta tasa permite cubrir con holgura el canal FM y el desplazamiento de sintonización, manteniéndose dentro de un régimen de operación estable para el dispositivo y la interfaz USB.
+
+No obstante, la tasa de adquisición no corresponde directamente a la tasa utilizada para calcular la resolución Doppler. Si se aplicara una FFT de 32.768 puntos directamente sobre una señal de 2,4 MS/s, la resolución sería:
+
+Δf_adquisición = f_s / N_FFT
+
+Δf_adquisición = 2.400.000 / 32.768 ≈ 73,24 Hz/bin
+
+Una separación de 73,24 Hz por bin resultaría insuficiente para analizar el perfil Doppler humano utilizado en el proyecto, cuya banda se encuentra aproximadamente entre 0,9 y 10 Hz.
+
+Para solucionar esta limitación, después de trasladar la emisora a banda base se aplica un filtrado y una decimación de factor 100. De esta manera, la tasa que alimenta la FFT Doppler es:
+
+f_s,análisis = f_s,SDR / D
+
+f_s,análisis = 2.400.000 / 100 = 24.000 S/s
+
+La decimación reduce el ancho de banda procesado y permite aumentar la resolución espectral sin modificar la tasa con la cual el RTL-SDR digitaliza originalmente la señal. El filtrado previo es indispensable para limitar el ancho de banda antes de reducir la tasa y evitar aliasing.
+
+
+5.3. Tamaño de FFT, ventana y resolución espectral
+
+Se seleccionó una FFT de 32.768 puntos como compromiso entre resolución espectral, carga computacional y tiempo de observación. Con la tasa de análisis reducida a 24 kS/s, la resolución obtenida es:
+
+Δf = f_s,análisis / N_FFT
+
+Δf = 24.000 / 32.768 = 0,7324 Hz/bin
+
+El dashboard redondea este resultado y presenta una resolución de 0,73 Hz. Esta configuración permite disponer de varios bins dentro de la banda Doppler comprendida entre 0,9 y 10 Hz. La resolución alcanzada constituye una mejora respecto de configuraciones preliminares con separaciones mayores, las cuales no permitían representar adecuadamente desplazamientos de pocos hertz.
+
+Para reducir la fuga espectral se utiliza una ventana Blackman-Harris. Esta ventana posee un lóbulo principal más ancho que una ventana rectangular, pero ofrece una supresión superior de los lóbulos laterales. Esta propiedad resulta conveniente cuando se busca identificar componentes débiles próximas a la señal directa dominante del iluminador FM.
+
+
+5.4. Ganancia del receptor
+
+La ganancia se configuró nominalmente en 20 dB mediante GNU Radio. El criterio de calibración consistió en evitar dos condiciones extremas. Una ganancia demasiado baja podría provocar que las reflexiones producidas por los blancos quedaran bajo el nivel de fondo. Por otra parte, una ganancia excesiva podría saturar la cadena de recepción debido a la potencia de la señal directa de la emisora, generando distorsión y componentes espurias.
+
+Durante la verificación del hardware se identificó un receptor RTL2832U equipado con un sintonizador Fitipower FC0012. Este dispositivo expone valores discretos de ganancia, por lo que el controlador puede aplicar el valor soportado más próximo a la consigna nominal ingresada en GNU Radio. En consecuencia, los 20 dB mostrados en el dashboard corresponden al valor configurado y registrado por el flowgraph, y no a una medición independiente de la ganancia efectiva aplicada internamente por el sintonizador.
+
+La selección de ganancia se evaluó observando la estabilidad del espectro y del waterfall, el nivel de fondo y la capacidad del detector para diferenciar movimiento de reposo. La serie experimental no presentó falsos positivos durante las capturas validadas de reposo, aunque mostró menor sensibilidad frente al movimiento corporal sin reflector metálico. Por esta razón se mantuvo el ajuste nominal, evitando elevar la ganancia únicamente para favorecer un caso particular y arriesgar la saturación frente a la señal directa.
+
+
+5.5. Resumen de los parámetros calibrados
+
+Emisora de referencia: 99,3 MHz.
+Justificación: iluminador FM seleccionado por su estabilidad y potencia recibida.
+
+Frecuencia central del SDR: 99,55 MHz.
+Justificación: sintonización 250 kHz por encima de la emisora para evitar la zona de continua; posteriormente se aplica una traslación digital.
+
+Sample rate de adquisición: 2,4 MS/s.
+Justificación: permite una digitalización estable y cubre el canal FM junto con el offset de sintonización.
+
+Ganancia nominal: 20 dB.
+Justificación: compromiso entre sensibilidad a las reflexiones y prevención de saturación.
+
+Factor de decimación: 100.
+Justificación: reduce la tasa de análisis desde 2,4 MS/s hasta 24 kS/s.
+
+Tamaño de FFT: 32.768 puntos.
+Justificación: proporciona alta resolución con una carga computacional abordable.
+
+Ventana espectral: Blackman-Harris.
+Justificación: reduce la fuga espectral y la contribución de los lóbulos laterales.
+
+Resolución: 0,7324 Hz/bin, mostrada como 0,73 Hz en el dashboard.
+Justificación: permite representar desplazamientos Doppler de pocos hertz.
+
+Período de actualización: aproximadamente 1 segundo.
+Justificación: genera un nuevo espectro por instante de análisis y permite evaluar persistencia temporal.
+
+Baseline del perfil humano: 10 instantes.
+Justificación: caracteriza el nivel de reposo antes de comenzar la fase de evaluación.
+
+
+5.6. Calibración del detector Doppler
+
+Cada captura se divide temporalmente en una fase inicial de reposo y una fase de evaluación. Para el perfil humano, los primeros diez espectros constituyen el baseline. En cada frecuencia k se calcula la mediana de potencia durante esa fase:
+
+B(k) = mediana{P(t,k)}, para t perteneciente al intervalo de reposo
+
+La mediana fue seleccionada por ser más robusta que el promedio frente a muestras atípicas o variaciones transitorias. Una vez construido el baseline, se calcula el exceso de potencia de cada bin:
+
+E(t,k) = P(t,k) − B(k)
+
+Durante las primeras pruebas se observó que un aumento general de potencia podía activar simultáneamente numerosos bins y ser interpretado erróneamente como movimiento. Para rechazar este comportamiento de banda ancha, en cada instante se calcula el cambio común mediante la mediana de los excesos dentro de la banda Doppler:
+
+C(t) = mediana_k{E(t,k)}
+
+El exceso localizado utilizado por el detector es:
+
+E_local(t,k) = E(t,k) − C(t)
+
+Esta operación favorece componentes que sobresalen localmente respecto del comportamiento general del espectro. Un bin se considera activo cuando su exceso localizado es igual o superior a 8 dB.
+
+El perfil humano analiza desplazamientos cuya magnitud se encuentra entre 0,9 y 10 Hz. Las componentes positivas y negativas con una misma magnitud se agrupan mediante el valor absoluto de la frecuencia, de modo que +f y −f no sean contadas dos veces como si representaran reflexiones independientes.
+
+Un instante se considera candidato cuando contiene al menos dos bins absolutos activos. Finalmente, el sistema solo declara movimiento si este criterio se mantiene durante dos instantes consecutivos. La persistencia temporal evita que impulsos aislados, interferencias breves o fluctuaciones de un solo espectro sean aceptados como eventos válidos.
+
+Los parámetros finales del perfil humano son los siguientes:
+
+- Banda Doppler: 0,9 a 10 Hz.
+- Umbral de exceso localizado: 8 dB.
+- Bins activos mínimos: 2.
+- Persistencia mínima: 2 instantes consecutivos.
+- Baseline: 10 instantes iniciales.
+
+Estos valores fueron seleccionados mediante capturas de reposo y movimiento. Durante la calibración, exigir tres bins produjo un falso negativo en una prueba sincronizada. El ajuste a dos bins, manteniendo un umbral de 8 dB y una persistencia de dos instantes, permitió recuperar el evento sin introducir falsos positivos en la serie validada de reposo. No se continuó reduciendo los criterios para evitar sobreajustar el detector a una única captura.
+
+
+5.7. Parámetros presentados en “Resultado del caso”
+
+El bloque “Resultado del caso” resume la decisión del procesador para la captura seleccionada. Sus valores no son ingresados manualmente, sino que se derivan del waterfall, del baseline, del perfil de detección y de la evaluación temporal. Los parámetros deben interpretarse de la siguiente forma.
+
+Movimiento detectado
+
+Corresponde a la decisión lógica final. El indicador presenta “Sí” cuando existe una secuencia temporal que cumple simultáneamente el umbral de exceso localizado, la cantidad mínima de bins activos y la persistencia requerida. Si alguno de estos criterios no se satisface, el sistema informa “No”.
+
+Doppler representativo
+
+Es el offset frecuencial, expresado en hertz, seleccionado para representar el evento válido. Se obtiene a partir del bin con mayor exceso localizado dentro de la secuencia consecutiva dominante. El desplazamiento puede ser positivo o negativo según el lado del espectro y la convención utilizada. Para estimar la magnitud de la rapidez, la aplicación utiliza su valor absoluto.
+
+Exceso sobre reposo
+
+Representa cuántos decibeles sobresale el bin elegido respecto de su baseline, después de descontar el cambio común del instante. Se calcula como E_local(t,k). Aunque algunas salidas históricas lo denominaron SNR, técnicamente no corresponde a una relación señal/ruido medida mediante un canal de ruido independiente. La denominación más rigurosa es “exceso localizado sobre reposo”.
+
+Bins activos
+
+Indica la cantidad de magnitudes Doppler diferentes cuyo exceso localizado supera el umbral configurado. Los pares simétricos +f y −f se consideran una sola magnitud para evitar duplicar una misma componente espectral. Este criterio exige que la actividad tenga cierta extensión espectral y no dependa de un único bin aislado.
+
+Eventos válidos
+
+Corresponde al número de secuencias que satisfacen el criterio de persistencia. La implementación selecciona y conserva el evento consecutivo dominante de la captura. Una activación de un solo instante no se contabiliza como evento válido si el perfil exige persistencia 2/2.
+
+Velocidad equivalente
+
+Es una rapidez estimada a partir del Doppler representativo. Primero se calcula la longitud de onda:
+
+λ = c / f_c
+
+Luego se utiliza:
+
+v_eq = |f_D| λ / g
+
+Finalmente, el resultado se convierte a kilómetros por hora:
+
+v_eq[km/h] = (|f_D| λ / g) × 3,6
+
+Para el perfil humano se utiliza g = 2, equivalente al supuesto ideal:
+
+cos(α_T) + cos(α_R) = 2
+
+Esta condición se obtiene al considerar α_T = 0° y α_R = 0°. La aplicación utiliza el valor absoluto de f_D porque informa la magnitud de la rapidez y no un sentido de movimiento calibrado.
+
+En una geometría biestática real, el factor depende de la dirección del blanco respecto del transmisor y del receptor. El montaje monocanal no determina los ángulos α_T y α_R; por ello, el valor mostrado debe denominarse velocidad equivalente obtenida mediante un modelo Doppler simplificado. No debe interpretarse como velocidad física exacta, velocidad vectorial ni medición calibrada del desplazamiento real del blanco.
+
+
+5.8. Alcance y limitaciones de la calibración
+
+La calibración permitió verificar el recorrido completo desde el RTL-SDR hasta el dashboard y establecer una configuración reproducible. La resolución de 0,7324 Hz/bin es coherente con la banda Doppler seleccionada, mientras que las reglas multibin y de persistencia reducen las decisiones provocadas por fluctuaciones aisladas. La sustracción del cambio común también evita interpretar aumentos generales de potencia como reflexiones localizadas.
+
+No obstante, el sistema utiliza un único canal de recepción. Por tanto, no dispone simultáneamente de un canal coherente de referencia y otro de vigilancia, no ejecuta cancelación adaptativa de la señal directa y no construye un mapa rango-Doppler. El baseline temporal aproxima una condición de referencia, pero no reemplaza una arquitectura biestática coherente de dos canales.
+
+Las pruebas mostraron una alta detectabilidad exploratoria para los ensayos realizados con objetos metálicos y una respuesta menos consistente frente al movimiento corporal sin metal. Esta diferencia debe presentarse como resultado experimental y no como una propiedad universal del detector, debido al número limitado de repeticiones y a la dependencia respecto de la geometría, orientación de las antenas, potencia de la emisora y reflectividad del blanco.
+
+Los indicadores de exactitud, tasa de detección y falsos positivos solo adquieren validez cuando cada captura se compara con la observación manual. El dashboard clasifica cada ensayo como verdadero positivo, verdadero negativo, falso positivo o falso negativo. Esta separación evita presentar como desempeño validado una detección que carece de ground truth y permite mantener trazabilidad entre la configuración utilizada, los datos originales, el resultado automático y la observación experimental.
+
+En consecuencia, los resultados permiten afirmar que el prototipo identifica actividad Doppler bajo las condiciones ensayadas, especialmente cuando el blanco presenta una respuesta reflectiva favorable. Sin embargo, no permiten estimar distancia, ángulo de llegada ni velocidad física exacta. Estas limitaciones son coherentes con el carácter experimental y monocanal de la solución desarrollada.
+

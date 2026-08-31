@@ -1,0 +1,2 @@
+validated_at,detection_timestamp,predicted_movement,observed_movement,outcome,notes
+2026-08-30T18:32:16-04:00,2026-08-30T14:52:29.430-04:00,True,True,TP,

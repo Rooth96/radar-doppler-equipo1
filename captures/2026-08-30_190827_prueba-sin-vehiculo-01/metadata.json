@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "capture_id": "2026-08-30_190827_prueba-sin-vehiculo-01",
+  "name": "prueba sin vehiculo 01",
+  "kind": "vehicle",
+  "status": "completed",
+  "created_at": "2026-08-30T19:08:27-04:00",
+  "notes": "",
+  "expected_movement": true,
+  "acquisition_mode": "rtl_sdr",
+  "requested_duration_seconds": 25.0,
+  "baseline_seconds": 10.0,
+  "updated_at": "2026-08-30T19:09:15-04:00"
+}

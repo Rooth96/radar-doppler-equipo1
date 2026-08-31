@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "capture_id": "2026-08-30_145158_calibracion-sincronizada-reposo-movimiento",
+  "name": "Calibracion sincronizada reposo movimiento",
+  "kind": "human",
+  "status": "completed",
+  "created_at": "2026-08-30T14:51:58-04:00",
+  "notes": "Fase de reposo y movimiento sincronizadas por la ventana GNU Radio",
+  "updated_at": "2026-08-30T14:54:20-04:00"
+}

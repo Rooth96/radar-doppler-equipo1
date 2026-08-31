@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "capture_id": "2026-08-26_vehiculo-30-kmh",
+  "name": "Vehículo — Referencia aproximada 30 km/h",
+  "kind": "vehicle",
+  "status": "completed",
+  "created_at": "2026-08-26T11:52:38-04:00",
+  "notes": "Captura histórica migrada a la estructura unificada."
+}

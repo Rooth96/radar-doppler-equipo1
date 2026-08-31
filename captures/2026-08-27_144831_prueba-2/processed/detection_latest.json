@@ -1,0 +1,22 @@
+{
+  "case_name": "PRUEBA 2",
+  "detection_mode": "SIMULATED_DOPPLER_EVENT",
+  "timestamp": "2026-08-27T14:48:49.000-04:00",
+  "event_start": "2026-08-27T14:48:44.000-04:00",
+  "event_end": "2026-08-27T14:48:49.000-04:00",
+  "detected": true,
+  "doppler_hz": 4.0,
+  "snr_db": 15.0,
+  "excess_db": 15.0,
+  "velocity_est_kmh": 43.47,
+  "active_bins": 3,
+  "persistence_hits": 6,
+  "minimum_active_bins": 3,
+  "minimum_hits": 3,
+  "known_speed_kmh": 30.0,
+  "doppler_band_min_hz": 1.0,
+  "doppler_band_max_hz": 10.0,
+  "threshold_db": 8.0,
+  "expected_max_doppler_hz": 5.52,
+  "status": "SIMULATED"
+}

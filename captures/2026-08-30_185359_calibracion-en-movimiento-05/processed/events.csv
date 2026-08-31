@@ -1,0 +1,2 @@
+timestamp,event_start,event_end,doppler_hz,snr_db,excess_db,active_bins,event_hits,velocity_est_kmh,detected
+2026-08-30T18:54:32.090-04:00,2026-08-30T18:54:31.051-04:00,2026-08-30T18:54:32.090-04:00,5.127,11.629,11.629,2,2,27.79,True

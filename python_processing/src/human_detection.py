@@ -12,9 +12,8 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 CASE_DIR = (
     PROJECT_ROOT
-    / "data"
-    / "archive"
-    / "caso_02_con_persona"
+    / "captures"
+    / "2026-08-25_persona-en-movimiento"
 )
 
 SDR_CONFIG_PATH = (
@@ -31,15 +30,13 @@ DETECTION_CONFIG_PATH = (
 
 SPECTRUM_PATH = (
     CASE_DIR
-    / "data"
-    / "realtime"
+    / "raw"
     / "spectrum_latest.csv"
 )
 
 WATERFALL_PATH = (
     CASE_DIR
-    / "data"
-    / "realtime"
+    / "raw"
     / "waterfall.csv"
 )
 

@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "capture_id": "2026-08-30_144256_validacion-completa-sin-movimiento",
+  "name": "Validacion completa sin movimiento",
+  "kind": "baseline",
+  "status": "completed",
+  "created_at": "2026-08-30T14:42:56-04:00",
+  "notes": "Validación real de adquisición y procesamiento automático",
+  "updated_at": "2026-08-30T14:45:20-04:00"
+}

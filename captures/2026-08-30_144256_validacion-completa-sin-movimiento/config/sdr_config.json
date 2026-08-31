@@ -1,0 +1,10 @@
+{
+  "timestamp": "2026-08-30T14:43:07-04:00",
+  "center_frequency_hz": 99550000.0,
+  "sample_rate_hz": 2400000.0,
+  "gain_db": 20.0,
+  "fft_size": 32768,
+  "frequency_resolution_hz": 0.732421875,
+  "window_type": "blackman-harris",
+  "source_device": "RTL-SDR EQ-2"
+}

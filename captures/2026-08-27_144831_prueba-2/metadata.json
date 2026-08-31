@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "capture_id": "2026-08-27_144831_prueba-2",
+  "name": "prueba 2",
+  "kind": "vehicle",
+  "status": "completed",
+  "created_at": "2026-08-27T14:48:31-04:00",
+  "notes": "prueba 2",
+  "updated_at": "2026-08-27T14:48:36-04:00"
+}

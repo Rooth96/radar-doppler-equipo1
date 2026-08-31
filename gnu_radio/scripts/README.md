@@ -6,12 +6,15 @@ Esta carpeta contiene scripts auxiliares asociados al módulo GNU Radio del Rada
 
 Los scripts de esta carpeta apoyarán la exportación de los datos generados por GNU Radio hacia los formatos definidos en el contrato de integración.
 
-GNU Radio deberá generar:
+En la arquitectura nueva, GNU Radio deberá recibir la carpeta de la captura
+activa y generar:
 
-- `config/sdr_config.json`
-- `data/realtime/spectrum_latest.csv`
-- `data/realtime/waterfall.csv`
-- `data/archive/capture_YYYYMMDD_HHMMSS.csv`
+- `captures/<capture_id>/config/sdr_config.json`
+- `captures/<capture_id>/raw/spectrum_latest.csv`
+- `captures/<capture_id>/raw/waterfall.csv`
+
+El flowgraph actual todavía escribe en `config/` y `data/realtime/`. La etapa 2
+reemplazará esas rutas fijas por un directorio de salida recibido como parámetro.
 
 ## Formatos
 

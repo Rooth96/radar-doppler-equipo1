@@ -1,0 +1,2 @@
+timestamp,event_id,ground_truth,validation_type
+2026-08-25T19:22:35.107-04:00,1,True,confirmed_movement

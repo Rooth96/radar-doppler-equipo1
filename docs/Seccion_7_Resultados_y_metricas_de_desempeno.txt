@@ -1,0 +1,239 @@
+7. RESULTADOS Y MÉTRICAS DE DESEMPEÑO
+
+La evaluación del sistema se realizó comparando la predicción automática de cada captura con la condición realmente observada durante el ensayo. Esta observación manual constituye el ground truth y permite determinar si una detección fue correcta o incorrecta. El nombre asignado a la captura no fue utilizado como verdad de referencia, debido a que una condición planificada podía no ejecutarse efectivamente, como ocurrió en uno de los ensayos denominados “en movimiento”.
+
+El dashboard incorporó una vista de validación global que agregó únicamente las capturas que poseían una observación manual bajo el contrato de datos vigente. Las capturas históricas, exploratorias o de diagnóstico que no contaban con ground truth permanecieron disponibles para inspección, pero no fueron incluidas en el cálculo de tasas de desempeño. Esta separación evitó presentar métricas artificiales o asumir como correctas condiciones que no habían sido confirmadas por un observador.
+
+Al término de la serie experimental se dispuso de catorce capturas validadas. La matriz de confusión global quedó compuesta por cinco verdaderos positivos, seis verdaderos negativos, ningún falso positivo y tres falsos negativos.
+
+
+7.1. Matriz de confusión
+
+La matriz de confusión relaciona la salida automática del detector con lo observado durante cada ensayo. Para este trabajo se utilizaron las siguientes categorías:
+
+Verdadero positivo (TP)
+
+Corresponde a una captura en la que el sistema declaró movimiento y el operador confirmó que efectivamente existió movimiento durante la fase de evaluación.
+
+Verdadero negativo (TN)
+
+Corresponde a una captura en la que el sistema no declaró movimiento y el operador confirmó que el escenario permaneció en reposo.
+
+Falso positivo (FP)
+
+Se produce cuando el sistema declara movimiento, pero el observador confirma que el escenario permaneció en reposo. Este resultado representa una falsa alarma.
+
+Falso negativo (FN)
+
+Se produce cuando existió movimiento real durante la fase de evaluación, pero el sistema no generó una detección válida. Este resultado representa un movimiento no detectado.
+
+La matriz obtenida fue la siguiente:
+
+                           Predicción: reposo     Predicción: movimiento
+Observado: reposo                   TN = 6                 FP = 0
+Observado: movimiento               FN = 3                 TP = 5
+
+Total de ensayos validados: 14.
+
+[INSERTAR FIGURA X. Matriz de confusión presentada por el dashboard]
+
+Pie sugerido: “Matriz de confusión global obtenida a partir de catorce capturas con validación manual. Fuente: elaboración propia”.
+
+
+7.2. Exactitud global
+
+La exactitud representa la proporción de capturas correctamente clasificadas respecto del total validado. Considera tanto los movimientos detectados correctamente como los ensayos de reposo correctamente rechazados.
+
+Exactitud = (TP + TN) / (TP + TN + FP + FN) × 100
+
+Reemplazando los resultados obtenidos:
+
+Exactitud = (5 + 6) / (5 + 6 + 0 + 3) × 100
+
+Exactitud = 11 / 14 × 100 = 78,57 %
+
+La exactitud global del sistema fue de 78,57 %. Esto significa que once de las catorce capturas validadas fueron clasificadas de acuerdo con la condición observada. Las tres clasificaciones incorrectas correspondieron a falsos negativos y no a falsas alarmas.
+
+La exactitud debe interpretarse junto con la composición de la muestra. Un valor global puede ocultar diferencias importantes entre tipos de blanco. En este caso, el sistema presentó un comportamiento estable en reposo y una respuesta favorable frente a objetos metálicos, pero menor sensibilidad ante movimientos corporales sin metal.
+
+
+7.3. Tasa de detección o sensibilidad
+
+La tasa de detección, también denominada sensibilidad o true positive rate, expresa qué proporción de los movimientos realmente observados fue detectada por el sistema. Su denominador incluye exclusivamente los ensayos positivos reales.
+
+Tasa de detección = TP / (TP + FN) × 100
+
+En la serie validada existieron ocho capturas con movimiento observado:
+
+Movimientos reales = TP + FN = 5 + 3 = 8
+
+Por tanto:
+
+Tasa de detección = 5 / (5 + 3) × 100
+
+Tasa de detección = 5 / 8 × 100 = 62,50 %
+
+La sensibilidad global fue de 62,50 %. El sistema identificó cinco de los ocho ensayos en que se confirmó movimiento y omitió tres. Los falsos negativos se asociaron a pruebas de movimiento corporal sin reflector metálico, lo que indica que la capacidad de detección no fue uniforme para todos los blancos ensayados.
+
+Este resultado no implica que el sistema posea una probabilidad universal de detección de 62,50 %. La cifra describe únicamente el conjunto experimental realizado, bajo la geometría, iluminador, antena, ganancia, trayectorias y condiciones ambientales utilizadas.
+
+
+7.4. Tasa de falsos positivos
+
+La tasa de falsos positivos cuantifica qué proporción de los ensayos realmente negativos fue clasificada incorrectamente como movimiento.
+
+Tasa de falsos positivos = FP / (FP + TN) × 100
+
+En el conjunto validado existieron seis capturas en las que no se observó movimiento:
+
+Ensayos negativos reales = FP + TN = 0 + 6 = 6
+
+Por tanto:
+
+Tasa de falsos positivos = 0 / (0 + 6) × 100
+
+Tasa de falsos positivos = 0 %
+
+No se registraron falsas alarmas dentro de la serie validada. Las cinco capturas planificadas de reposo fueron clasificadas correctamente. Además, una captura inicialmente planificada como ensayo de movimiento se ejecutó accidentalmente sin mover el blanco; el sistema tampoco declaró movimiento y, debido a la condición realmente observada, fue clasificada correctamente como verdadero negativo.
+
+El resultado de 0 % es favorable, pero debe interpretarse considerando que solo se realizaron seis ensayos negativos validados. No demuestra que el sistema sea incapaz de producir falsas alarmas en otras ubicaciones, con otras emisoras o bajo interferencias diferentes. Indica que los criterios de umbral, bins activos, persistencia y rechazo del cambio común fueron estables en las condiciones ensayadas.
+
+
+7.5. Especificidad y precisión de las detecciones
+
+Aunque el dashboard priorizó exactitud, tasa de detección y tasa de falsos positivos, la misma matriz permite obtener dos indicadores complementarios.
+
+La especificidad representa la proporción de condiciones de reposo correctamente identificadas:
+
+Especificidad = TN / (TN + FP) × 100
+
+Especificidad = 6 / (6 + 0) × 100 = 100 %
+
+La precisión o valor predictivo positivo representa qué proporción de las alarmas generadas correspondió efectivamente a movimiento observado:
+
+Precisión = TP / (TP + FP) × 100
+
+Precisión = 5 / (5 + 0) × 100 = 100 %
+
+Dentro del conjunto validado, toda detección automática coincidió con movimiento observado y todos los ensayos de reposo fueron rechazados correctamente. La principal limitación no fue, por tanto, la generación de falsas alarmas, sino la pérdida de movimientos con menor respuesta reflectiva.
+
+
+7.6. Resultados según el tipo de blanco
+
+Los resultados mostraron diferencias entre los ensayos realizados con un objeto metálico y aquellos efectuados únicamente mediante movimiento corporal.
+
+Movimiento con objeto metálico
+
+En la serie principal se realizaron tres capturas en las que se desplazó un objeto metálico durante la fase de evaluación. Las tres fueron detectadas y validadas como verdaderos positivos.
+
+Resultado exploratorio con metal:
+
+- Ensayos positivos: 3.
+- Verdaderos positivos: 3.
+- Falsos negativos: 0.
+- Sensibilidad observada: 3/3 = 100 %.
+
+Movimiento corporal sin objeto metálico
+
+Se consideró el ensayo inicial de movimiento del brazo y tres capturas complementarias sin metal. De estos cuatro ensayos, uno fue detectado y tres no fueron detectados.
+
+Resultado exploratorio sin metal:
+
+- Ensayos positivos: 4.
+- Verdaderos positivos: 1.
+- Falsos negativos: 3.
+- Sensibilidad observada: 1/4 = 25 %.
+
+La diferencia observada sugiere que los blancos con una respuesta reflectiva más favorable producen perturbaciones espectrales que superan con mayor facilidad los criterios configurados. Un objeto metálico puede generar una reflexión más intensa que determinadas partes del cuerpo, dependiendo de su tamaño, orientación y trayectoria.
+
+Sin embargo, la comparación debe considerarse exploratoria. El número de repeticiones fue reducido y no se controlaron de forma instrumental todas las variables, como distancia exacta, velocidad del movimiento, sección radar equivalente, orientación del objeto y potencia instantánea del iluminador. En consecuencia, no corresponde afirmar que el sistema tenga una sensibilidad general de 100 % para cualquier objeto metálico ni de 25 % para cualquier persona. Los valores describen solamente las condiciones ensayadas.
+
+
+7.7. Resultado del ensayo vehicular
+
+La captura vehicular realizada en ACAPOMIL se analizó mediante un perfil específico y se mantuvo separada de la matriz humana global. Durante el paso de un automóvil cuya velocidad de referencia era aproximadamente 30 km/h, el sistema identificó un evento Doppler persistente.
+
+Los principales valores del evento fueron:
+
+- Movimiento detectado: sí.
+- Eventos válidos: 1.
+- Doppler representativo: 1,367 Hz.
+- Exceso sobre el baseline: 23,16 dB.
+- Bins activos: 12, frente a un mínimo de 4.
+- Persistencia: 9 instantes, frente a un mínimo de 3.
+- Banda analizada: 1,0 a 6,5 Hz.
+- Instantes totales: 40.
+- Instantes de baseline: 10.
+
+El desplazamiento medido se encontró bajo el máximo teórico aproximado de 5,52 Hz calculado para 30 km/h bajo una geometría ideal. Esta diferencia es esperable porque el Doppler biestático depende de la trayectoria y de los ángulos entre transmisor, blanco y receptor.
+
+La velocidad estimada se dejó sin calibrar. Los 30 km/h correspondieron a la referencia del vehículo durante la prueba y no a una velocidad obtenida mediante el radar. Debido a que el sistema monocanal no determina los factores geométricos, el ensayo vehicular se presentó como evidencia de un evento compatible con movimiento del automóvil, sin atribuirle una medición exacta de velocidad.
+
+
+7.8. Exceso sobre reposo y calidad de los eventos
+
+El dashboard presenta para cada evento un “exceso sobre reposo” expresado en dB. Este indicador corresponde a la diferencia localizada entre la potencia del bin representativo y el baseline, después de sustraer el cambio común del espectro en ese instante.
+
+E(t,k) = P(t,k) − B(k)
+
+C(t) = mediana_k{E(t,k)}
+
+E_local(t,k) = E(t,k) − C(t)
+
+El evento supera el criterio de potencia cuando:
+
+E_local(t,k) ≥ 8 dB
+
+Este valor no debe presentarse estrictamente como una relación señal/ruido física, ya que el montaje no utiliza un canal independiente para medir ruido ni una referencia coherente separada. Su interpretación correcta es contraste o exceso localizado respecto del estado de reposo.
+
+La calidad de una detección no depende únicamente del bin de mayor amplitud. El sistema exige además una cantidad mínima de bins activos y persistencia temporal. En el perfil humano se utilizaron dos bins absolutos y dos instantes consecutivos. En el perfil vehicular se utilizaron cuatro bins y tres instantes. La combinación de estos criterios permitió rechazar impulsos aislados y evitar que una sola fluctuación se contabilizara como evento válido.
+
+
+7.9. Indicadores que no deben interpretarse como desempeño validado
+
+La velocidad equivalente mostrada para el perfil humano se calcula mediante un modelo geométrico simplificado. Su valor no representa una medición exacta de la velocidad física del brazo u objeto y, por tanto, no fue utilizado para determinar si una detección era correcta. La validación se basó en la presencia o ausencia de movimiento, no en la coincidencia de velocidades.
+
+De manera similar, la atenuación de la portadora directa no fue incluida como indicador calculado. El sistema no dispone de una medición independiente antes y después de una etapa de cancelación, por lo que asignar un valor de atenuación habría producido una métrica sin respaldo experimental.
+
+Las capturas que no contaban con ground truth tampoco fueron utilizadas para calcular exactitud, sensibilidad o falsos positivos. El dashboard las contabilizó como pendientes de validación y las mantuvo disponibles únicamente para inspección técnica.
+
+
+7.10. Resumen de desempeño
+
+Los principales resultados globales fueron:
+
+- Capturas validadas: 14.
+- Verdaderos positivos: 5.
+- Verdaderos negativos: 6.
+- Falsos positivos: 0.
+- Falsos negativos: 3.
+- Exactitud: 78,57 %.
+- Tasa de detección o sensibilidad: 62,50 %.
+- Tasa de falsos positivos: 0 %.
+- Especificidad: 100 %.
+- Precisión de las detecciones: 100 %.
+
+[INSERTAR FIGURA X. Vista “Resumen global de validación” del dashboard]
+
+[INSERTAR FIGURA X. Tabla de ensayos validados y resultados TP, TN, FP y FN]
+
+[INSERTAR TABLA X. Métricas globales de desempeño]
+
+Tabla sugerida:
+
+Indicador                         Valor
+Capturas validadas                14
+Verdaderos positivos              5
+Verdaderos negativos              6
+Falsos positivos                  0
+Falsos negativos                  3
+Exactitud                         78,57 %
+Tasa de detección                 62,50 %
+Tasa de falsos positivos          0 %
+Especificidad                     100 %
+Precisión                         100 %
+
+Pie sugerido: “Métricas obtenidas mediante comparación entre la predicción automática y la observación manual de cada captura. Fuente: elaboración propia”.
+
+En términos generales, el prototipo mostró un comportamiento conservador: no generó falsas alarmas en los ensayos validados, pero omitió algunos movimientos con menor reflectividad. Esta característica explica la precisión de 100 % y, al mismo tiempo, la sensibilidad de 62,50 %. Los resultados demuestran capacidad experimental de detección, especialmente frente a blancos metálicos, pero también evidencian las limitaciones del montaje pasivo monocanal frente a movimientos corporales menos intensos.
+
